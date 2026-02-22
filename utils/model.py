@@ -15,7 +15,7 @@ from ultralytics import YOLO
 # ---------------------------------------------------------------------------
 
 @st.cache_resource(show_spinner="Loading YOLO26 model – this takes a moment…")
-def load_model(model_name: str = "yolo11n.pt") -> YOLO:
+def load_model(model_name: str = "yolo26n.pt") -> YOLO:
     """
     Load and cache the Ultralytics YOLO model.
 
@@ -24,10 +24,11 @@ def load_model(model_name: str = "yolo11n.pt") -> YOLO:
     if the page re-runs (e.g. the user adjusts the confidence slider).
 
     Args:
-        model_name: Ultralytics model identifier.  The library resolves
+        model_name: Ultralytics model identifier. The library resolves
                     this to the correct weights file automatically.
-                    We use 'yolo11n.pt' (YOLO v11 nano) as a fast default;
-                    swap with 'yolo11s.pt', 'yolo11m.pt', etc. for accuracy.
+                    We use 'yolo26n.pt' (YOLO26 nano) as a fast default;
+                    swap with 'yolo26s.pt', 'yolo26m.pt', 'yolo26l.pt',
+                    'yolo26x.pt' for higher accuracy.
 
     Returns:
         A loaded YOLO model instance ready for inference.

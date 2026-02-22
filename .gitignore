@@ -13,6 +13,9 @@ env/
 dist/
 build/
 
+# Game progress data (personal, local only)
+data/
+
 # Model weights (large binaries)
 *.pt
 
