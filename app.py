@@ -725,6 +725,54 @@ st.markdown(
         margin-top: 6px;
         line-height: 1.5;
     }
+    .cp-section-label {
+        font-size: 0.72rem;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #ff8f3d;
+        margin: 10px 0 5px 0;
+    }
+    .cp-mat-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
+    .cp-mat-chip {
+        font-size: 0.73rem;
+        color: #9bb5d0;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid #2a3750;
+        border-radius: 20px;
+        padding: 2px 9px;
+    }
+    .cp-steps {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 4px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .cp-step {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 0.8rem;
+        color: #c0cfe0;
+        line-height: 1.45;
+    }
+    .cp-step-n {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: rgba(255,106,0,0.18);
+        border: 1px solid #ff6a00;
+        color: #ff8f3d;
+        font-size: 0.65rem;
+        font-weight: 900;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 1px;
+    }
     /* Mark Complete button — green instead of orange */
     div[data-testid="stButton"] button[kind="secondary"] {
         background: linear-gradient(90deg, #16a34a, #22c55e) !important;
@@ -1352,13 +1400,41 @@ def _render_completed_log() -> None:
             diff   = r.get("difficulty", "")
             meta   = " · ".join(filter(None, [diff, r.get("time_est", ""), dt_str]))
 
-            # Enrich with tagline / learn from the project definition if available
-            full = _all_projects.get(r.get("title", ""), {})
-            tagline = r.get("tagline") or full.get("tagline", "")
-            learn   = full.get("learn", "")
+            # Enrich from the canonical project definition
+            full      = _all_projects.get(r.get("title", ""), {})
+            tagline   = r.get("tagline") or full.get("tagline", "")
+            learn     = full.get("learn", "")
+            steps     = full.get("steps", [])
+            materials = full.get("materials", [])
 
-            tagline_html = f'<div class="cp-tagline">"{tagline}"</div>' if tagline else ""
-            learn_html   = f'<div class="cp-learn">💡 {learn}</div>'   if learn   else ""
+            tagline_html = (
+                f'<div class="cp-tagline">"{tagline}"</div>'
+            ) if tagline else ""
+
+            learn_html = (
+                f'<div class="cp-learn">💡 {learn}</div>'
+            ) if learn else ""
+
+            materials_html = ""
+            if materials:
+                chips = "".join(
+                    f'<span class="cp-mat-chip">{m}</span>' for m in materials
+                )
+                materials_html = (
+                    f'<div class="cp-section-label">📦 Materials</div>'
+                    f'<div class="cp-mat-list">{chips}</div>'
+                )
+
+            steps_html = ""
+            if steps:
+                lis = "".join(
+                    f'<li class="cp-step"><span class="cp-step-n">{i+1}</span>{s}</li>'
+                    for i, s in enumerate(steps)
+                )
+                steps_html = (
+                    f'<div class="cp-section-label">📋 Steps</div>'
+                    f'<ol class="cp-steps">{lis}</ol>'
+                )
 
             rows_html += f"""
             <details class="cp-row">
@@ -1373,6 +1449,8 @@ def _render_completed_log() -> None:
                 <div class="cp-detail">
                     {tagline_html}
                     {learn_html}
+                    {materials_html}
+                    {steps_html}
                 </div>
             </details>"""
 
