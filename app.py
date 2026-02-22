@@ -58,67 +58,143 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
 
-    /* ── Base ────────────────────────────────────────────── */
+    /* ── Base / chassis ──────────────────────────────────── */
+    :root {
+        --bg-main: #2b313f;
+        --bg-shell: #11141c;
+        --bg-panel: #171d2b;
+        --bg-panel-2: #101521;
+        --text-main: #e5e7eb;
+        --text-muted: #8b96a9;
+        --line: #2c3447;
+        --line-soft: #222a3b;
+        --accent: #ff6a00;
+        --accent-soft: #ff8f3d;
+        --accent-glow: rgba(255, 106, 0, 0.35);
+        --good: #22c55e;
+        --med: #f59e0b;
+        --hard: #ef4444;
+        --combo: #a855f7;
+    }
     html, body, [data-testid="stAppViewContainer"] {
-        background: #080c18 !important;
+        background: radial-gradient(circle at 20% -10%, #3c4457 0%, var(--bg-main) 46%, #222836 100%) !important;
         font-family: 'Nunito', sans-serif;
+        color: var(--text-main);
+    }
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: fixed;
+        inset: 16px;
+        border-radius: 22px;
+        border: 1px solid #3a4358;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 14px 40px rgba(0,0,0,0.45);
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
+        pointer-events: none;
+        z-index: 0;
     }
     [data-testid="stSidebar"] { display: none; }
     [data-testid="collapsedControl"] { display: none; }
     footer { visibility: hidden; }
+    section.main > div {
+        max-width: 1180px;
+        padding-top: 22px;
+        padding-bottom: 84px;
+    }
+    div[data-testid="stVerticalBlock"] > div:has(> .game-header),
+    div[data-testid="stVerticalBlock"] > div:has(> .quest-board),
+    div[data-testid="stVerticalBlock"] > div:has(> .completion-panel),
+    div[data-testid="stVerticalBlock"] > div:has(> .trophy-shell) {
+        position: relative;
+        z-index: 1;
+    }
+    hr {
+        border-color: var(--line) !important;
+    }
 
-    /* ── Game header ─────────────────────────────────────── */
+    /* ── Top HUD shell ───────────────────────────────────── */
     .game-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
-        background: linear-gradient(135deg, #0f1628 0%, #141e3d 100%);
-        border: 2px solid #1e2d5c;
+        background: linear-gradient(155deg, #0f131d 0%, #171c29 65%, #10141f 100%);
+        border: 1px solid #2d3548;
         border-radius: 18px;
-        padding: 14px 24px;
-        margin-bottom: 18px;
-        gap: 12px;
+        padding: 14px 18px;
+        margin-bottom: 14px;
+        gap: 10px;
         flex-wrap: wrap;
+        box-shadow: 0 8px 28px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .hud-left {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 0;
     }
     .game-title {
-        font-family: 'Fredoka One', cursive;
-        font-size: 1.9rem;
-        background: linear-gradient(90deg, #FFD700, #FFA500);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.8rem;
+        line-height: 1.05;
+        letter-spacing: 1.2px;
+        font-weight: 900;
+        color: #f3f4f6;
+        text-transform: uppercase;
         white-space: nowrap;
+        text-shadow: 0 0 16px rgba(255,255,255,0.06);
+    }
+    .hud-nav {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.7px;
+        text-transform: uppercase;
+    }
+    .hud-nav-item {
+        color: #7f8aa0;
+        padding: 4px 0;
+        border-bottom: 2px solid transparent;
+    }
+    .hud-nav-item.active {
+        color: #e5e7eb;
+        border-bottom-color: var(--accent);
+        text-shadow: 0 0 12px var(--accent-glow);
     }
     .hud-badges {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         align-items: center;
         flex-wrap: wrap;
+        justify-content: flex-end;
     }
     .hud-badge {
-        background: #0d1627;
-        border: 2px solid #1e2d5c;
+        background: linear-gradient(145deg, #141a28, #101522);
+        border: 1px solid #2a3244;
         border-radius: 12px;
-        padding: 6px 14px;
-        font-size: 1rem;
+        padding: 8px 14px;
+        font-size: 0.95rem;
         font-weight: 900;
-        color: #e2e8f0;
+        color: var(--text-main);
         white-space: nowrap;
         min-height: 48px;
         display: flex;
         align-items: center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     }
-    .hud-badge.streak { border-color: #f97316; color: #fb923c; }
-    .hud-badge.score  { border-color: #a855f7; color: #c084fc; }
-    .hud-badge.timer  { border-color: #38bdf8; color: #7dd3fc; }
+    .hud-badge.streak { border-color: rgba(255,106,0,0.45); color: #ff9a52; }
+    .hud-badge.score  { border-color: #4b556b; color: #d1d5db; }
+    .hud-badge.timer  { border-color: rgba(56,189,248,0.35); color: #9fdcff; }
 
-    /* ── Quest board ─────────────────────────────────────── */
+    /* ── Quest board panel ───────────────────────────────── */
     .quest-board {
-        background: linear-gradient(135deg, #0f1628, #141e3d);
-        border: 2px solid #1e2d5c;
+        background: linear-gradient(155deg, #111621 0%, #171d2b 55%, #0f131e 100%);
+        border: 1px solid #2d3548;
         border-radius: 18px;
-        padding: 20px;
-        margin-bottom: 18px;
+        padding: 18px;
+        margin-bottom: 14px;
         animation: boardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.02);
     }
     @keyframes boardIn {
         from { transform: translateY(-30px) scale(0.95); opacity: 0; }
@@ -128,22 +204,27 @@ st.markdown(
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+        gap: 10px;
+        flex-wrap: wrap;
     }
     .quest-board-title {
-        font-family: 'Fredoka One', cursive;
-        font-size: 1.3rem;
-        color: #FFD700;
-        letter-spacing: 1px;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.12rem;
+        color: #f3f4f6;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        font-weight: 900;
     }
     .quest-progress-pill {
-        background: #1a2240;
-        border: 2px solid #2d3d80;
+        background: linear-gradient(145deg, #1a2233, #121928);
+        border: 1px solid #2e394d;
         border-radius: 20px;
-        padding: 4px 16px;
+        padding: 6px 12px;
         font-weight: 900;
-        font-size: 1rem;
-        color: #93c5fd;
+        font-size: 0.88rem;
+        color: #f8fafc;
+        box-shadow: inset 0 0 10px rgba(255,106,0,0.12);
     }
 
     /* ── Quest tiles grid ────────────────────────────────── */
@@ -186,21 +267,21 @@ st.markdown(
         padding: 8px;
     }
     .quest-tile-front {
-        background: linear-gradient(145deg, #1a2240, #1e2a50);
-        border: 2px solid #2d3d80;
-        box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        background: linear-gradient(145deg, #191f2f, #121927);
+        border: 1px solid #30384b;
+        box-shadow: 0 6px 16px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.02);
         cursor: pointer;
         transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
     .quest-tile-front:hover {
-        transform: scale(1.06);
-        border-color: #4c8eff;
-        box-shadow: 0 6px 32px rgba(76,142,255,0.4), 0 0 0 2px rgba(76,142,255,0.15);
+        transform: scale(1.04);
+        border-color: rgba(255,106,0,0.58);
+        box-shadow: 0 8px 26px var(--accent-glow), 0 0 0 1px rgba(255,106,0,0.18);
     }
     .quest-tile-back {
-        background: linear-gradient(145deg, #0d3b1f, #155a2e);
-        border: 2px solid #22c55e;
-        box-shadow: 0 4px 20px rgba(34,197,94,0.35);
+        background: linear-gradient(145deg, #1b2a1e, #10301b);
+        border: 1px solid #2f7a49;
+        box-shadow: 0 4px 20px rgba(34,197,94,0.25);
         transform: rotateY(180deg);
     }
     .tile-emoji      { font-size: 2.2rem; line-height: 1; }
@@ -214,37 +295,44 @@ st.markdown(
     /* ── Progress bar ────────────────────────────────────── */
     .quest-progress-bar {
         height: 8px;
-        background: #1a2240;
+        background: #121827;
         border-radius: 4px;
-        margin-top: 18px;
+        margin-top: 14px;
         overflow: hidden;
+        border: 1px solid #222a3b;
     }
     .quest-progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #22c55e, #4ade80);
+        background: linear-gradient(90deg, #ff6a00, #ff8f3d);
         border-radius: 4px;
         transition: width 0.6s ease;
+        box-shadow: 0 0 12px rgba(255,106,0,0.45);
     }
 
     /* ── Completion panel ────────────────────────────────── */
     .completion-panel {
-        background: linear-gradient(135deg, #0d2a0a, #0f3b12);
-        border: 3px solid #22c55e;
+        background: linear-gradient(145deg, #161d2c, #111725);
+        border: 1px solid #2f384b;
         border-radius: 20px;
-        padding: 28px 24px;
+        padding: 22px 20px;
         text-align: center;
-        margin-bottom: 20px;
+        margin-bottom: 14px;
         animation: completionPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.44), inset 0 0 0 1px rgba(255,255,255,0.02);
     }
     @keyframes completionPop {
         from { transform: scale(0.85); opacity: 0; }
         to   { transform: scale(1);    opacity: 1; }
     }
     .completion-title {
-        font-family: 'Fredoka One', cursive;
-        font-size: 2.4rem;
-        color: #FFD700;
+        font-family: 'Nunito', sans-serif;
+        font-size: 2rem;
+        color: #ffb27a;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        font-weight: 900;
         margin-bottom: 6px;
+        text-shadow: 0 0 18px rgba(255,106,0,0.28);
     }
     .completion-stats {
         display: flex;
@@ -254,14 +342,14 @@ st.markdown(
         margin: 16px 0;
     }
     .stat-box {
-        background: #0a1f08;
-        border: 2px solid #22c55e;
+        background: linear-gradient(145deg, #121a29, #0f1522);
+        border: 1px solid #2c3548;
         border-radius: 12px;
         padding: 10px 18px;
         text-align: center;
     }
-    .stat-value { font-size: 1.8rem; font-weight: 900; color: #4ade80; }
-    .stat-label { font-size: 0.75rem; color: #86efac; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 1.8rem; font-weight: 900; color: #ff8f3d; }
+    .stat-label { font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; }
     .new-trophy-row {
         display: flex;
         gap: 10px;
@@ -270,20 +358,30 @@ st.markdown(
         margin-top: 12px;
     }
     .new-trophy-tag {
-        background: #1a1000;
-        border: 2px solid #FFD700;
+        background: linear-gradient(145deg, #26160a, #1b1107);
+        border: 1px solid #9a5b2c;
         border-radius: 10px;
         padding: 6px 14px;
         font-size: 0.9rem;
         font-weight: 900;
-        color: #FFD700;
+        color: #ffcc9d;
     }
 
     /* ── Trophy case ─────────────────────────────────────── */
+    .trophy-shell {
+        background: linear-gradient(145deg, #121826, #0f141f);
+        border: 1px solid #2d3548;
+        border-radius: 16px;
+        padding: 14px 14px 8px;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
     .trophy-section-title {
-        font-family: 'Fredoka One', cursive;
-        font-size: 1.2rem;
-        color: #FFD700;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1rem;
+        color: #f3f4f6;
+        letter-spacing: 1px;
+        font-weight: 900;
+        text-transform: uppercase;
         margin-bottom: 12px;
     }
     .trophy-shelf {
@@ -293,19 +391,19 @@ st.markdown(
         margin-bottom: 24px;
     }
     .trophy-card {
-        background: linear-gradient(145deg, #1a1000, #261800);
-        border: 2px solid #b45309;
+        background: linear-gradient(145deg, #28170c, #1b1109);
+        border: 1px solid #8d5731;
         border-radius: 12px;
         padding: 10px 16px;
         font-size: 0.9rem;
         font-weight: 700;
-        color: #fbbf24;
+        color: #ffd5aa;
         position: relative;
     }
     .trophy-card.locked {
-        background: #0d1120;
-        border-color: #1e2d5c;
-        color: #374151;
+        background: linear-gradient(145deg, #171e2e, #111724);
+        border-color: #2b3448;
+        color: #667085;
         cursor: help;
     }
     .trophy-card.locked:hover::after {
@@ -314,8 +412,8 @@ st.markdown(
         bottom: calc(100% + 8px);
         left: 50%;
         transform: translateX(-50%);
-        background: #1e2d5c;
-        color: #93c5fd;
+        background: #1c2434;
+        color: #cdd6e5;
         font-size: 0.75rem;
         font-weight: 700;
         padding: 6px 10px;
@@ -323,7 +421,7 @@ st.markdown(
         white-space: nowrap;
         z-index: 100;
         pointer-events: none;
-        border: 1px solid #2d4a8a;
+        border: 1px solid #35435c;
     }
 
     /* ── Detection result cards ──────────────────────────── */
@@ -331,35 +429,44 @@ st.markdown(
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #0f1628;
-        border: 1px solid #1e2d5c;
+        background: linear-gradient(145deg, #151c2a, #101622);
+        border: 1px solid #2b3447;
         border-radius: 10px;
         padding: 8px 14px;
         margin-bottom: 6px;
         min-height: 48px;
     }
-    .det-card.quest-hit { border-color: #22c55e; background: #0a1f08; }
+    .det-card.quest-hit { border-color: rgba(255,106,0,0.5); background: linear-gradient(145deg, #26170f, #17141b); }
     .det-label { font-weight: 700; color: #e2e8f0; font-size: 0.9rem; }
-    .det-conf  { font-size: 0.82rem; color: #4ade80; font-weight: 900; }
-    .det-bonus { font-size: 0.75rem; color: #6366f1; font-weight: 700; }
+    .det-conf  { font-size: 0.82rem; color: #ff9a52; font-weight: 900; }
+    .det-bonus { font-size: 0.75rem; color: #8da2c8; font-weight: 700; }
 
     /* ── Drag-zone upload ────────────────────────────────── */
     .drag-zone {
-        border: 2.5px dashed #2d3d80;
+        border: 2px dashed #3b465f;
         border-radius: 18px;
         padding: 36px 24px;
         text-align: center;
-        background: linear-gradient(135deg, #0f1628 0%, #141e3d 100%);
+        background: linear-gradient(145deg, #121926 0%, #0f1521 100%);
         margin-bottom: 12px;
         transition: border-color 0.2s ease, background 0.2s ease;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
     }
     .drag-zone:hover {
-        border-color: #4c8eff;
-        background: linear-gradient(135deg, #111c36 0%, #172348 100%);
+        border-color: #ff8f3d;
+        background: linear-gradient(145deg, #171f31 0%, #121927 100%);
     }
     .drag-zone-icon  { font-size: 3rem; line-height: 1; margin-bottom: 10px; }
-    .drag-zone-title { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #e2e8f0; margin-bottom: 4px; }
-    .drag-zone-sub   { color: #64748b; font-size: 0.9rem; }
+    .drag-zone-title {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.2rem;
+        color: #e2e8f0;
+        margin-bottom: 4px;
+        letter-spacing: 1px;
+        font-weight: 900;
+        text-transform: uppercase;
+    }
+    .drag-zone-sub   { color: #98a4b9; font-size: 0.9rem; }
 
     /* ── Scan animation ──────────────────────────────────── */
     @keyframes scanDown {
@@ -371,7 +478,8 @@ st.markdown(
         overflow: hidden;
         border-radius: 14px;
         height: 76px;
-        background: linear-gradient(135deg, #0b1020, #0f1a35);
+        background: linear-gradient(145deg, #101623, #131a2a);
+        border: 1px solid #303a4f;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -382,45 +490,50 @@ st.markdown(
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+        background: linear-gradient(90deg, transparent, #ff8f3d, transparent);
         animation: scanDown 1.1s ease-in-out infinite;
         z-index: 10;
-        box-shadow: 0 0 14px #38bdf8;
+        box-shadow: 0 0 14px rgba(255,143,61,0.85);
     }
     .scan-label {
         position: relative;
         z-index: 11;
-        color: #7dd3fc;
-        font-family: 'Fredoka One', cursive;
+        color: #ffd0aa;
+        font-family: 'Nunito', sans-serif;
         font-size: 1.1rem;
-        letter-spacing: 1px;
+        letter-spacing: 1.1px;
+        text-transform: uppercase;
+        font-weight: 900;
     }
 
     /* ── Project cards ───────────────────────────────────── */
     .project-section-title {
-        font-family: 'Fredoka One', cursive;
-        font-size: 1.2rem;
-        color: #a78bfa;
-        margin: 24px 0 12px 0;
+        font-family: 'Nunito', sans-serif;
+        font-size: 1rem;
+        color: #f3f4f6;
+        margin: 22px 0 10px 0;
+        font-weight: 900;
+        letter-spacing: 1px;
+        text-transform: uppercase;
     }
     .project-card {
-        background: linear-gradient(135deg, #0e1529 0%, #131d3a 100%);
-        border: 2px solid #1e2d5c;
-        border-left: 5px solid #22c55e;
+        background: linear-gradient(150deg, #151b29 0%, #101521 100%);
+        border: 1px solid #2e374b;
+        border-left: 4px solid var(--good);
         border-radius: 14px;
         padding: 18px 20px;
         margin-bottom: 14px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.44), inset 0 0 0 1px rgba(255,255,255,0.02);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .project-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.52);
     }
-    .project-card.easy   { border-left-color: #22c55e; }
-    .project-card.medium { border-left-color: #f59e0b; }
-    .project-card.hard   { border-left-color: #ef4444; }
-    .project-card.combo  { border-left-color: #a855f7; border: 2px solid #7c3aed; border-left: 5px solid #a855f7; }
+    .project-card.easy   { border-left-color: var(--good); }
+    .project-card.medium { border-left-color: var(--med); }
+    .project-card.hard   { border-left-color: var(--hard); }
+    .project-card.combo  { border-left-color: var(--combo); border-color: #5f4b84; }
     .project-header {
         display: flex;
         align-items: flex-start;
@@ -434,7 +547,14 @@ st.markdown(
         gap: 10px;
     }
     .project-emoji { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
-    .project-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: #e2e8f0; }
+    .project-title {
+        font-family: 'Nunito', sans-serif;
+        font-size: 1.06rem;
+        color: #e2e8f0;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        font-weight: 900;
+    }
     .project-difficulty-pill {
         border-radius: 20px;
         padding: 3px 12px;
@@ -446,12 +566,12 @@ st.markdown(
         display: flex;
         align-items: center;
     }
-    .pill-easy   { background: rgba(34,197,94,0.15);  border: 1.5px solid #22c55e; color: #4ade80; }
-    .pill-medium { background: rgba(245,158,11,0.15); border: 1.5px solid #f59e0b; color: #fcd34d; }
-    .pill-hard   { background: rgba(239,68,68,0.15);  border: 1.5px solid #ef4444; color: #f87171; }
-    .pill-combo  { background: rgba(168,85,247,0.15); border: 1.5px solid #a855f7; color: #c084fc; }
-    .project-tagline { color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
-    .project-divider  { border: none; border-top: 1px solid #1e2d5c; margin: 10px 0; }
+    .pill-easy   { background: rgba(34,197,94,0.14);  border: 1px solid var(--good); color: #7cf2a8; }
+    .pill-medium { background: rgba(245,158,11,0.14); border: 1px solid var(--med); color: #ffcf8a; }
+    .pill-hard   { background: rgba(239,68,68,0.14);  border: 1px solid var(--hard); color: #ff9ca0; }
+    .pill-combo  { background: rgba(168,85,247,0.14); border: 1px solid var(--combo); color: #d4a7ff; }
+    .project-tagline { color: #a8b2c4; font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
+    .project-divider  { border: none; border-top: 1px solid #2a3347; margin: 10px 0; }
     .project-meta {
         display: flex;
         gap: 16px;
@@ -460,7 +580,7 @@ st.markdown(
         flex-wrap: wrap;
         margin-bottom: 10px;
     }
-    .project-meta strong { color: #94a3b8; }
+    .project-meta strong { color: #c8d1df; }
     .project-steps { list-style: none; padding: 0; margin: 8px 0 14px 0; }
     .project-steps li {
         color: #cbd5e1;
@@ -473,16 +593,16 @@ st.markdown(
         content: attr(data-n) ".";
         position: absolute;
         left: 0;
-        color: #4c8eff;
+        color: var(--accent-soft);
         font-weight: 900;
     }
     .project-cta-btn {
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        background: linear-gradient(90deg, #4c8eff, #7c3aed);
+        background: linear-gradient(90deg, #ff6a00, #ff8f3d);
         color: #fff !important;
-        font-family: 'Fredoka One', cursive;
+        font-family: 'Nunito', sans-serif;
         font-size: 0.95rem;
         padding: 10px 20px;
         border-radius: 10px;
@@ -492,33 +612,89 @@ st.markdown(
         min-height: 48px;
         float: right;
         margin-top: 4px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        font-weight: 900;
+        box-shadow: 0 6px 18px rgba(255,106,0,0.34);
     }
-    .project-cta-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .project-cta-btn:disabled {
+        opacity: 0.92;
+        cursor: default;
+    }
+    .project-cta-btn:hover { opacity: 0.95; transform: scale(1.02); }
     .project-empty-state {
         text-align: center;
         padding: 28px 20px;
-        background: linear-gradient(135deg, #0e1529, #131d3a);
-        border: 2px dashed #1e2d5c;
+        background: linear-gradient(145deg, #151c2b, #101621);
+        border: 1px dashed #3a455e;
         border-radius: 14px;
-        color: #64748b;
+        color: #9aa7bd;
         font-size: 0.95rem;
         margin-bottom: 14px;
     }
     .project-empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
 
+    /* ── Streamlit controls skin ─────────────────────────── */
+    div.stButton > button, div.stDownloadButton > button {
+        background: linear-gradient(90deg, #ff6a00, #ff8f3d) !important;
+        color: white !important;
+        border: 1px solid #ff9a52 !important;
+        border-radius: 12px !important;
+        min-height: 48px !important;
+        font-weight: 900 !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 6px 16px rgba(255,106,0,0.28);
+    }
+    div.stButton > button:hover, div.stDownloadButton > button:hover {
+        filter: brightness(1.05);
+        border-color: #ffc38f !important;
+    }
+    div[data-testid="stFileUploader"] > label,
+    div[data-testid="stFileUploader"] section {
+        background: linear-gradient(145deg, #131a28, #101621) !important;
+        border: 1px solid #36425b !important;
+        border-radius: 12px !important;
+    }
+    div[data-testid="stExpander"] details {
+        background: linear-gradient(145deg, #131a27, #101621);
+        border: 1px solid #2f394d;
+        border-radius: 12px;
+        padding: 6px 8px;
+    }
+    div[data-testid="stSlider"] [data-baseweb="slider"] > div > div {
+        background-color: var(--accent) !important;
+    }
+
+    /* ── Tabs: dashboard strips ──────────────────────────── */
+    div[data-testid="stTabs"] {
+        background: linear-gradient(145deg, #121826, #0f141f);
+        border: 1px solid #2d3548;
+        border-radius: 14px;
+        padding: 8px 10px 10px;
+        margin-top: 8px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    }
     /* ── Bottom mobile nav ───────────────────────────────── */
     .mobile-nav-bar { display: none; }
 
     /* ── Settings expander ───────────────────────────────── */
-    details summary { color: #94a3b8 !important; font-size: 0.9rem; }
+    details summary { color: #d7deeb !important; font-size: 0.9rem; font-weight: 800; }
 
     /* ── Misc helpers ────────────────────────────────────── */
-    .img-caption { text-align: center; color: #64748b; font-size: 0.82rem; margin-top: 4px; }
-    div[data-testid="stTabs"] button { font-family: 'Nunito', sans-serif; font-weight: 900; }
+    .img-caption { text-align: center; color: #a0aec0; font-size: 0.82rem; margin-top: 4px; }
+    div[data-testid="stTabs"] button {
+        font-family: 'Nunito', sans-serif;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        letter-spacing: 0.7px;
+    }
 
     /* ── Mobile: 640px breakpoint ────────────────────────── */
     @media (max-width: 640px) {
         .game-title { font-size: 1.3rem; white-space: normal; }
+        .hud-nav { gap: 10px; font-size: 0.66rem; }
         .hud-badge  { font-size: 0.82rem; padding: 5px 10px; }
         .quest-tiles {
             display: grid;
@@ -542,10 +718,10 @@ st.markdown(
             left: 0;
             right: 0;
             z-index: 9999;
-            background: rgba(8, 12, 24, 0.88);
+            background: rgba(14, 18, 28, 0.9);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border-top: 1px solid #1e2d5c;
+            border-top: 1px solid #36435f;
             padding: 8px 16px;
             justify-content: space-around;
             align-items: center;
@@ -554,9 +730,9 @@ st.markdown(
             font-weight: 900;
         }
         .nav-item         { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #64748b; }
-        .nav-item.streak  { color: #fb923c; }
-        .nav-item.score   { color: #c084fc; }
-        .nav-item.found   { color: #4ade80; }
+        .nav-item.streak  { color: #ffb27a; }
+        .nav-item.score   { color: #e2e8f0; }
+        .nav-item.found   { color: #86efac; }
         .nav-icon         { font-size: 1.1rem; }
     }
 
@@ -717,7 +893,12 @@ def _render_header(streak: int, score: int, quest_start: float, completed: bool)
     st.markdown(
         f"""
         <div class="game-header">
-            <span class="game-title">🔍 Scavenger Hunt</span>
+            <div class="hud-left">
+                <span class="game-title">Scavenger Hunt</span>
+                <div class="hud-nav">
+                    <span class="hud-nav-item active">Dashboard</span>
+                </div>
+            </div>
             <div class="hud-badges">
                 <span class="hud-badge streak">🔥 Streak: {streak}</span>
                 <span class="hud-badge score">⭐ {score} pts</span>
@@ -790,7 +971,7 @@ _TROPHY_HINTS: dict[str, str] = {
 
 
 def _render_trophy_case(trophies: list[str]) -> None:
-    st.markdown('<div class="trophy-section-title">🏆 Trophy Case</div>', unsafe_allow_html=True)
+    st.markdown('<div class="trophy-shell"><div class="trophy-section-title">🏆 Trophy Case</div>', unsafe_allow_html=True)
     cards = ""
     for t in _ALL_TROPHIES:
         if t in trophies:
@@ -798,7 +979,7 @@ def _render_trophy_case(trophies: list[str]) -> None:
         else:
             hint = _TROPHY_HINTS.get(t, "Keep playing to unlock!")
             cards += f'<div class="trophy-card locked" data-hint="{hint}">🔒 ???</div>'
-    st.markdown(f'<div class="trophy-shelf">{cards}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="trophy-shelf">{cards}</div></div>', unsafe_allow_html=True)
 
 
 # ── Share card (PIL) ──────────────────────────────────────────────────────────
@@ -1011,7 +1192,7 @@ def _render_project_cards(suggestions: list[dict]) -> None:
                 </div>
                 <hr class="project-divider">
                 <ol class="project-steps">{steps_html}</ol>
-                <a class="project-cta-btn" href="#" onclick="return false;">▶ Let's Make It! →</a>
+                <button class="project-cta-btn" type="button" disabled>▶ Let's Make It! →</button>
                 <div style="clear:both"></div>
             </div>
             """,
