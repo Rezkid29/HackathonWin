@@ -21,6 +21,7 @@ Architecture
   utils/detection.py  ← Inference pipeline + bounding-box renderer
   utils/quest.py      ← Quest generation, COCO emojis, detection checker
   utils/progress.py   ← Streak / trophy persistence
+  utils/projects.py   ← Project Ideas Engine (DIY suggestions from detections)
 """
 
 from __future__ import annotations
@@ -39,13 +40,14 @@ from utils.detection import Detection, bgr_to_pil, run_inference
 from utils.model import load_model
 from utils.progress import load_progress, on_quest_completed, save_progress
 from utils.quest import check_detections, generate_quest, get_emoji
+from utils.projects import get_project_suggestions
 
 # ── Page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
     page_title="Scavenger Hunt – YOLOVision",
     page_icon="🔍",
-    layout="wide",
+    layout="centered",
     initial_sidebar_state="collapsed",
 )
 
@@ -76,6 +78,7 @@ st.markdown(
         padding: 14px 24px;
         margin-bottom: 18px;
         gap: 12px;
+        flex-wrap: wrap;
     }
     .game-title {
         font-family: 'Fredoka One', cursive;
@@ -100,10 +103,13 @@ st.markdown(
         font-weight: 900;
         color: #e2e8f0;
         white-space: nowrap;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
     }
-    .hud-badge.streak   { border-color: #f97316; color: #fb923c; }
-    .hud-badge.score    { border-color: #a855f7; color: #c084fc; }
-    .hud-badge.timer    { border-color: #38bdf8; color: #7dd3fc; }
+    .hud-badge.streak { border-color: #f97316; color: #fb923c; }
+    .hud-badge.score  { border-color: #a855f7; color: #c084fc; }
+    .hud-badge.timer  { border-color: #38bdf8; color: #7dd3fc; }
 
     /* ── Quest board ─────────────────────────────────────── */
     .quest-board {
@@ -139,18 +145,21 @@ st.markdown(
         font-size: 1rem;
         color: #93c5fd;
     }
+
+    /* ── Quest tiles grid ────────────────────────────────── */
     .quest-tiles {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
         gap: 12px;
-        flex-wrap: wrap;
-        justify-content: center;
+        justify-items: center;
     }
+
     /* ── Tile flip card ──────────────────────────────────── */
     .quest-tile-wrapper {
         perspective: 900px;
-        width: 120px;
+        width: 100%;
+        max-width: 140px;
         height: 145px;
-        flex-shrink: 0;
     }
     .quest-tile-inner {
         width: 100%;
@@ -180,10 +189,13 @@ st.markdown(
         background: linear-gradient(145deg, #1a2240, #1e2a50);
         border: 2px solid #2d3d80;
         box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     }
     .quest-tile-front:hover {
+        transform: scale(1.06);
         border-color: #4c8eff;
-        box-shadow: 0 4px 20px rgba(76,142,255,0.2);
+        box-shadow: 0 6px 32px rgba(76,142,255,0.4), 0 0 0 2px rgba(76,142,255,0.15);
     }
     .quest-tile-back {
         background: linear-gradient(145deg, #0d3b1f, #155a2e);
@@ -288,11 +300,30 @@ st.markdown(
         font-size: 0.9rem;
         font-weight: 700;
         color: #fbbf24;
+        position: relative;
     }
     .trophy-card.locked {
         background: #0d1120;
         border-color: #1e2d5c;
         color: #374151;
+        cursor: help;
+    }
+    .trophy-card.locked:hover::after {
+        content: attr(data-hint);
+        position: absolute;
+        bottom: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e2d5c;
+        color: #93c5fd;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 6px 10px;
+        border-radius: 8px;
+        white-space: nowrap;
+        z-index: 100;
+        pointer-events: none;
+        border: 1px solid #2d4a8a;
     }
 
     /* ── Detection result cards ──────────────────────────── */
@@ -305,11 +336,178 @@ st.markdown(
         border-radius: 10px;
         padding: 8px 14px;
         margin-bottom: 6px;
+        min-height: 48px;
     }
     .det-card.quest-hit { border-color: #22c55e; background: #0a1f08; }
     .det-label { font-weight: 700; color: #e2e8f0; font-size: 0.9rem; }
     .det-conf  { font-size: 0.82rem; color: #4ade80; font-weight: 900; }
     .det-bonus { font-size: 0.75rem; color: #6366f1; font-weight: 700; }
+
+    /* ── Drag-zone upload ────────────────────────────────── */
+    .drag-zone {
+        border: 2.5px dashed #2d3d80;
+        border-radius: 18px;
+        padding: 36px 24px;
+        text-align: center;
+        background: linear-gradient(135deg, #0f1628 0%, #141e3d 100%);
+        margin-bottom: 12px;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    .drag-zone:hover {
+        border-color: #4c8eff;
+        background: linear-gradient(135deg, #111c36 0%, #172348 100%);
+    }
+    .drag-zone-icon  { font-size: 3rem; line-height: 1; margin-bottom: 10px; }
+    .drag-zone-title { font-family: 'Fredoka One', cursive; font-size: 1.3rem; color: #e2e8f0; margin-bottom: 4px; }
+    .drag-zone-sub   { color: #64748b; font-size: 0.9rem; }
+
+    /* ── Scan animation ──────────────────────────────────── */
+    @keyframes scanDown {
+        0%   { top: 0%; }
+        100% { top: 100%; }
+    }
+    .scan-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 14px;
+        height: 76px;
+        background: linear-gradient(135deg, #0b1020, #0f1a35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 8px 0;
+    }
+    .scan-overlay {
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+        animation: scanDown 1.1s ease-in-out infinite;
+        z-index: 10;
+        box-shadow: 0 0 14px #38bdf8;
+    }
+    .scan-label {
+        position: relative;
+        z-index: 11;
+        color: #7dd3fc;
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+    }
+
+    /* ── Project cards ───────────────────────────────────── */
+    .project-section-title {
+        font-family: 'Fredoka One', cursive;
+        font-size: 1.2rem;
+        color: #a78bfa;
+        margin: 24px 0 12px 0;
+    }
+    .project-card {
+        background: linear-gradient(135deg, #0e1529 0%, #131d3a 100%);
+        border: 2px solid #1e2d5c;
+        border-left: 5px solid #22c55e;
+        border-radius: 14px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .project-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+    }
+    .project-card.easy   { border-left-color: #22c55e; }
+    .project-card.medium { border-left-color: #f59e0b; }
+    .project-card.hard   { border-left-color: #ef4444; }
+    .project-card.combo  { border-left-color: #a855f7; border: 2px solid #7c3aed; border-left: 5px solid #a855f7; }
+    .project-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+    .project-header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .project-emoji { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+    .project-title { font-family: 'Fredoka One', cursive; font-size: 1.1rem; color: #e2e8f0; }
+    .project-difficulty-pill {
+        border-radius: 20px;
+        padding: 3px 12px;
+        font-size: 0.78rem;
+        font-weight: 900;
+        white-space: nowrap;
+        flex-shrink: 0;
+        min-height: 28px;
+        display: flex;
+        align-items: center;
+    }
+    .pill-easy   { background: rgba(34,197,94,0.15);  border: 1.5px solid #22c55e; color: #4ade80; }
+    .pill-medium { background: rgba(245,158,11,0.15); border: 1.5px solid #f59e0b; color: #fcd34d; }
+    .pill-hard   { background: rgba(239,68,68,0.15);  border: 1.5px solid #ef4444; color: #f87171; }
+    .pill-combo  { background: rgba(168,85,247,0.15); border: 1.5px solid #a855f7; color: #c084fc; }
+    .project-tagline { color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
+    .project-divider  { border: none; border-top: 1px solid #1e2d5c; margin: 10px 0; }
+    .project-meta {
+        display: flex;
+        gap: 16px;
+        font-size: 0.85rem;
+        color: #64748b;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+    }
+    .project-meta strong { color: #94a3b8; }
+    .project-steps { list-style: none; padding: 0; margin: 8px 0 14px 0; }
+    .project-steps li {
+        color: #cbd5e1;
+        font-size: 0.88rem;
+        padding: 4px 0 4px 22px;
+        position: relative;
+        line-height: 1.5;
+    }
+    .project-steps li::before {
+        content: attr(data-n) ".";
+        position: absolute;
+        left: 0;
+        color: #4c8eff;
+        font-weight: 900;
+    }
+    .project-cta-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: linear-gradient(90deg, #4c8eff, #7c3aed);
+        color: #fff !important;
+        font-family: 'Fredoka One', cursive;
+        font-size: 0.95rem;
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none !important;
+        min-height: 48px;
+        float: right;
+        margin-top: 4px;
+    }
+    .project-cta-btn:hover { opacity: 0.9; transform: scale(1.02); }
+    .project-empty-state {
+        text-align: center;
+        padding: 28px 20px;
+        background: linear-gradient(135deg, #0e1529, #131d3a);
+        border: 2px dashed #1e2d5c;
+        border-radius: 14px;
+        color: #64748b;
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+    }
+    .project-empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    /* ── Bottom mobile nav ───────────────────────────────── */
+    .mobile-nav-bar { display: none; }
 
     /* ── Settings expander ───────────────────────────────── */
     details summary { color: #94a3b8 !important; font-size: 0.9rem; }
@@ -317,6 +515,56 @@ st.markdown(
     /* ── Misc helpers ────────────────────────────────────── */
     .img-caption { text-align: center; color: #64748b; font-size: 0.82rem; margin-top: 4px; }
     div[data-testid="stTabs"] button { font-family: 'Nunito', sans-serif; font-weight: 900; }
+
+    /* ── Mobile: 640px breakpoint ────────────────────────── */
+    @media (max-width: 640px) {
+        .game-title { font-size: 1.3rem; white-space: normal; }
+        .hud-badge  { font-size: 0.82rem; padding: 5px 10px; }
+        .quest-tiles {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+            gap: 8px;
+        }
+        .quest-tile-wrapper { width: 100%; max-width: 100%; height: 130px; }
+        .project-card { padding: 14px 12px; }
+        .completion-stats { gap: 12px; }
+        .trophy-shelf { gap: 8px; }
+        .trophy-card  { font-size: 0.78rem; padding: 8px 12px; }
+        .drag-zone { padding: 24px 16px; }
+        .drag-zone-title { font-size: 1.1rem; }
+        body { padding-bottom: 64px; }
+
+        /* Show bottom nav on mobile */
+        .mobile-nav-bar {
+            display: flex;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: rgba(8, 12, 24, 0.88);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-top: 1px solid #1e2d5c;
+            padding: 8px 16px;
+            justify-content: space-around;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 900;
+        }
+        .nav-item         { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #64748b; }
+        .nav-item.streak  { color: #fb923c; }
+        .nav-item.score   { color: #c084fc; }
+        .nav-item.found   { color: #4ade80; }
+        .nav-icon         { font-size: 1.1rem; }
+    }
+
+    /* ── Mobile: 360px breakpoint ────────────────────────── */
+    @media (max-width: 360px) {
+        .game-title { font-size: 1.1rem; }
+        .hud-badge.timer .timer-label { display: none; }
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -337,6 +585,13 @@ def _init_state() -> None:
         st.session_state.last_img_id        = None
         st.session_state.webcam_running     = False
         st.session_state.last_detections    = []
+        st.session_state.last_pil_img       = None
+        st.session_state.last_annotated_pil = None
+    # Settings survive re-init (initialized separately)
+    if "scan_confidence" not in st.session_state:
+        st.session_state.scan_confidence = 0.45
+    if "scan_model" not in st.session_state:
+        st.session_state.scan_model = "yolo26n.pt"
 
 
 _init_state()
@@ -453,7 +708,11 @@ def _render_header(streak: int, score: int, quest_start: float, completed: bool)
     else:
         elapsed = int(time.time() - quest_start)
         mins, secs = divmod(elapsed, 60)
-        timer_html = f'<span class="hud-badge timer">⏱ {mins}:{secs:02d}</span>'
+        timer_html = (
+            f'<span class="hud-badge timer">'
+            f'<span class="timer-label">⏱&nbsp;</span>{mins}:{secs:02d}'
+            f'</span>'
+        )
 
     st.markdown(
         f"""
@@ -518,6 +777,17 @@ _ALL_TROPHIES = [
     "Explorer Elite 🌟",
 ]
 
+_TROPHY_HINTS: dict[str, str] = {
+    "First Quest! 🏆":       "Complete your very first quest",
+    "Speed Run Star ⭐":     "Finish a quest in under 60 seconds",
+    "New Record! ⚡":        "Beat your personal best completion time",
+    "Hot Streak 🔥":         "Play on 3 consecutive days",
+    "On Fire! 🔥🔥":         "Play on 7 consecutive days",
+    "Legendary Streak 🌟":   "Play on 30 consecutive days",
+    "Quest Master 🎯":       "Complete 5 quests total",
+    "Explorer Elite 🌟":     "Complete 10 quests total",
+}
+
 
 def _render_trophy_case(trophies: list[str]) -> None:
     st.markdown('<div class="trophy-section-title">🏆 Trophy Case</div>', unsafe_allow_html=True)
@@ -526,7 +796,8 @@ def _render_trophy_case(trophies: list[str]) -> None:
         if t in trophies:
             cards += f'<div class="trophy-card">{t}</div>'
         else:
-            cards += f'<div class="trophy-card locked">🔒 ???</div>'
+            hint = _TROPHY_HINTS.get(t, "Keep playing to unlock!")
+            cards += f'<div class="trophy-card locked" data-hint="{hint}">🔒 ???</div>'
     st.markdown(f'<div class="trophy-shelf">{cards}</div>', unsafe_allow_html=True)
 
 
@@ -549,17 +820,14 @@ def _make_share_card(
     except Exception:
         fnt_big = fnt_med = fnt_sm = ImageFont.load_default()
 
-    # Background gradient approximation
     for y in range(H):
         r = int(8  + (14 - 8)  * y / H)
         g = int(12 + (24 - 12) * y / H)
         b = int(23 + (55 - 23) * y / H)
         draw.line([(0, y), (W, y)], fill=(r, g, b))
 
-    # Title
     draw.text((W // 2, 32), "🔍 SCAVENGER HUNT", font=fnt_big, fill="#FFD700", anchor="mm")
 
-    # Items grid
     x_start, y_start = 60, 90
     col_w = 180
     for i, item in enumerate(items):
@@ -568,9 +836,8 @@ def _make_share_card(
         y = y_start + row * 72
         tick = "✅" if item in found else "⬜"
         emoji = get_emoji(item)
-        draw.text((x, y),      f"{tick} {emoji} {item.title()}", font=fnt_med, fill="#e2e8f0")
+        draw.text((x, y), f"{tick} {emoji} {item.title()}", font=fnt_med, fill="#e2e8f0")
 
-    # Stats row
     y_stats = 268
     draw.rectangle([(40, y_stats - 8), (W - 40, y_stats + 52)], fill="#0f1628", outline="#1e2d5c", width=2)
     if comp_time is not None:
@@ -578,12 +845,11 @@ def _make_share_card(
         t_str = f"⏱ {mins}m {secs}s" if mins else f"⏱ {secs}s"
     else:
         t_str = "⏱ In progress"
-    draw.text((80,  y_stats + 18), t_str,         font=fnt_med, fill="#7dd3fc", anchor="lm")
+    draw.text((80,  y_stats + 18), t_str,             font=fnt_med, fill="#7dd3fc", anchor="lm")
     draw.text((W // 2, y_stats + 18), f"⭐ {score} pts", font=fnt_med, fill="#c084fc", anchor="mm")
     n_found = len(found & set(items))
     draw.text((W - 80, y_stats + 18), f"{n_found}/5 found", font=fnt_med, fill="#4ade80", anchor="rm")
 
-    # Watermark
     draw.text((W // 2, H - 18), "Made with YOLOVision 🔍", font=fnt_sm, fill="#334155", anchor="mm")
 
     return img
@@ -592,14 +858,17 @@ def _make_share_card(
 # ── New quest helper ──────────────────────────────────────────────────────────
 
 def _new_quest() -> None:
-    st.session_state.quest_items       = generate_quest()
-    st.session_state.quest_found       = set()
-    st.session_state.quest_start_time  = time.time()
-    st.session_state.quest_completed   = False
-    st.session_state.quest_comp_time   = None
-    st.session_state.new_trophies      = []
-    st.session_state.last_img_id       = None
-    st.session_state.pending_sound     = "whoosh"
+    st.session_state.quest_items        = generate_quest()
+    st.session_state.quest_found        = set()
+    st.session_state.quest_start_time   = time.time()
+    st.session_state.quest_completed    = False
+    st.session_state.quest_comp_time    = None
+    st.session_state.new_trophies       = []
+    st.session_state.last_img_id        = None
+    st.session_state.last_pil_img       = None
+    st.session_state.last_annotated_pil = None
+    st.session_state.last_detections    = []
+    st.session_state.pending_sound      = "whoosh"
 
 
 # ── Quest detection handler ───────────────────────────────────────────────────
@@ -623,19 +892,17 @@ def _handle_detections(
 
     st.session_state.session_score += len(bonus_names) * 5
 
-    # Refresh board immediately via placeholder
     with quest_board_slot.container():
         st.markdown(
             _quest_board_html(quest_items, st.session_state.quest_found),
             unsafe_allow_html=True,
         )
 
-    # Quest completion
     all_found = set(quest_items) <= st.session_state.quest_found
     if all_found and not st.session_state.quest_completed:
-        st.session_state.quest_completed  = True
+        st.session_state.quest_completed = True
         comp_time = time.time() - st.session_state.quest_start_time
-        st.session_state.quest_comp_time  = comp_time
+        st.session_state.quest_comp_time = comp_time
 
         progress = load_progress()
         progress, new_trophies = on_quest_completed(progress, comp_time)
@@ -657,8 +924,8 @@ def _render_detections(detections: List[Detection], quest_items: List[str]) -> N
         st.info("No objects detected. Try a different angle or image!")
         return
 
-    quest_hits    = [d for d in detections if d.class_name in quest_items]
-    bonus_finds   = [d for d in detections if d.class_name not in quest_items]
+    quest_hits  = [d for d in detections if d.class_name in quest_items]
+    bonus_finds = [d for d in detections if d.class_name not in quest_items]
 
     if quest_hits:
         st.markdown("#### 🎯 Quest Objects Found!")
@@ -685,13 +952,84 @@ def _render_detections(detections: List[Detection], quest_items: List[str]) -> N
         )
 
 
+# ── Project cards renderer ────────────────────────────────────────────────────
+
+def _render_project_cards(suggestions: list[dict]) -> None:
+    """Render project suggestion cards as styled craft-instruction cards."""
+    if not suggestions:
+        st.markdown(
+            """
+            <div class="project-empty-state">
+                <div class="project-empty-icon">🎨</div>
+                <div><strong style="color:#94a3b8;">Point your camera at more objects</strong><br>
+                to unlock project ideas!</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return
+
+    st.markdown(
+        '<div class="project-section-title">🛠️ Project Ideas Unlocked!</div>',
+        unsafe_allow_html=True,
+    )
+
+    for p in suggestions:
+        is_combo = p.get("_is_combo", False)
+        diff     = p.get("difficulty", "Easy").lower()
+
+        if is_combo:
+            card_cls = "combo"
+            pill_cls = "combo"
+            pill_lbl = "✨ Combo!"
+        else:
+            card_cls = diff
+            pill_cls = diff
+            pill_lbl = p.get("difficulty", "Easy")
+
+        steps_html = "".join(
+            f'<li data-n="{i + 1}">{step}</li>'
+            for i, step in enumerate(p.get("steps", []))
+        )
+        materials_str = ", ".join(p.get("materials", []))
+
+        st.markdown(
+            f"""
+            <div class="project-card {card_cls}">
+                <div class="project-header">
+                    <div class="project-header-left">
+                        <span class="project-emoji">{p['emoji']}</span>
+                        <span class="project-title">{p['title']}</span>
+                    </div>
+                    <span class="project-difficulty-pill pill-{pill_cls}">{pill_lbl}</span>
+                </div>
+                <div class="project-tagline">{p['tagline']}</div>
+                <hr class="project-divider">
+                <div class="project-meta">
+                    <span>⏱ {p['time_est']}</span>
+                    <span>📦 <strong>Materials:</strong> {materials_str}</span>
+                </div>
+                <hr class="project-divider">
+                <ol class="project-steps">{steps_html}</ol>
+                <a class="project-cta-btn" href="#" onclick="return false;">▶ Let's Make It! →</a>
+                <div style="clear:both"></div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
 # ════════════════════════════════════════════════════════════════════════════════
 # MAIN APP
 # ════════════════════════════════════════════════════════════════════════════════
 
-progress     = load_progress()
-quest_items  = st.session_state.quest_items
-quest_found  = st.session_state.quest_found
+progress    = load_progress()
+quest_items = st.session_state.quest_items
+quest_found = st.session_state.quest_found
+
+# ── Read scanner settings from session state (set by expander below) ──────────
+confidence   = st.session_state.scan_confidence
+model_choice = st.session_state.scan_model
 
 # ── Header ────────────────────────────────────────────────────────────────────
 _render_header(
@@ -701,14 +1039,14 @@ _render_header(
     completed=st.session_state.quest_completed,
 )
 
-# ── Quest board (placeholder so we can update it in-place later) ──────────────
+# ── Quest board (placeholder for in-place updates) ────────────────────────────
 quest_board_slot = st.empty()
 sound_slot       = st.empty()
 
 with quest_board_slot.container():
     st.markdown(_quest_board_html(quest_items, quest_found), unsafe_allow_html=True)
 
-# ── Completion panel + new quest button ───────────────────────────────────────
+# ── Completion panel + action buttons ─────────────────────────────────────────
 if st.session_state.quest_completed:
     comp_time = st.session_state.quest_comp_time or 0.0
     speed_run = comp_time <= 60
@@ -719,7 +1057,7 @@ if st.session_state.quest_completed:
         speed_run=speed_run,
     )
 
-    col_btn, col_share, _ = st.columns([1.2, 1.2, 3])
+    col_btn, col_share = st.columns(2, gap="small")
     with col_btn:
         if st.button("🎲 New Quest!", use_container_width=True, type="primary"):
             _new_quest()
@@ -736,24 +1074,12 @@ if st.session_state.quest_completed:
             use_container_width=True,
         )
 
-# ── Pending sound (plays after page renders) ──────────────────────────────────
+# ── Pending sound ─────────────────────────────────────────────────────────────
 if st.session_state.pending_sound:
     _inject_sound(st.session_state.pending_sound)
     st.session_state.pending_sound = None
 
-# ── Scanner settings ──────────────────────────────────────────────────────────
-with st.expander("⚙️ Scanner Settings", expanded=False):
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        confidence = st.slider("Confidence", 0.10, 1.00, 0.45, 0.05)
-    with col_s2:
-        model_choice = st.selectbox(
-            "YOLO Variant",
-            ["yolo26n.pt", "yolo26s.pt", "yolo26m.pt", "yolo26l.pt", "yolo26x.pt"],
-            index=0,
-            help="n = fastest · x = most accurate",
-        )
-
+# ── Load model (uses settings from session state) ─────────────────────────────
 model = load_model(model_choice)
 
 # ── Detection tabs ────────────────────────────────────────────────────────────
@@ -766,10 +1092,18 @@ with tab_img:
     if st.session_state.quest_completed:
         st.info("Quest complete! Start a new quest above to keep scanning.")
     else:
+        # Decorative drag zone (visual affordance; actual upload below)
         st.markdown(
-            "📸 **Take or upload a photo** of anything around you — "
-            "the scanner will find your quest objects automatically!"
+            """
+            <div class="drag-zone">
+                <div class="drag-zone-icon">📷</div>
+                <div class="drag-zone-title">Drag a photo here</div>
+                <div class="drag-zone-sub">— or use the browse button below —</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
+
         uploaded = st.file_uploader(
             "Drop or browse an image",
             type=["jpg", "jpeg", "png"],
@@ -783,7 +1117,7 @@ with tab_img:
                 st.session_state.last_img_id = file_id
 
                 try:
-                    raw = uploaded.read()
+                    raw     = uploaded.read()
                     pil_img = Image.open(io.BytesIO(raw))
                     pil_img.verify()
                     pil_img = Image.open(io.BytesIO(raw)).convert("RGB")
@@ -791,32 +1125,56 @@ with tab_img:
                     st.error(f"⚠️ Couldn't open image: `{exc}`")
                     st.stop()
 
-                with st.spinner("🔍 Scanning for objects…"):
-                    try:
-                        annotated_bgr, detections = run_inference(model, pil_img, confidence)
-                        annotated_pil = bgr_to_pil(annotated_bgr)
-                    except Exception as exc:
-                        st.error(f"⚠️ Inference failed: `{exc}`")
-                        st.stop()
+                # Animated scan banner during inference
+                scan_slot = st.empty()
+                scan_slot.markdown(
+                    """
+                    <div class="scan-container">
+                        <div class="scan-overlay"></div>
+                        <div class="scan-label">🔍&nbsp; Scanning for objects…</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
-                st.session_state.last_detections = detections
+                try:
+                    annotated_bgr, detections = run_inference(model, pil_img, confidence)
+                    annotated_pil             = bgr_to_pil(annotated_bgr)
+                except Exception as exc:
+                    scan_slot.empty()
+                    st.error(f"⚠️ Inference failed: `{exc}`")
+                    st.stop()
+
+                scan_slot.empty()
+
+                # Persist results in session state for reruns
+                st.session_state.last_pil_img       = pil_img
+                st.session_state.last_annotated_pil = annotated_pil
+                st.session_state.last_detections    = detections
                 _handle_detections(detections, quest_board_slot, sound_slot)
 
-            if st.session_state.last_detections is not None:
-                col_orig, col_det = st.columns(2, gap="medium")
-                with col_orig:
-                    st.image(pil_img, use_container_width=True)
-                    st.markdown('<p class="img-caption">Original</p>', unsafe_allow_html=True)
-                with col_det:
-                    try:
-                        ann_bgr, _ = run_inference(model, pil_img, confidence)
-                        st.image(bgr_to_pil(ann_bgr), use_container_width=True)
-                    except Exception:
-                        pass
+        # Display results (persists across reruns while same file is uploaded)
+        if (
+            st.session_state.last_detections is not None
+            and st.session_state.last_pil_img is not None
+        ):
+            # Image tabs (replaces two-column layout — stacks cleanly on mobile)
+            img_orig_tab, img_det_tab = st.tabs(["🖼 Original", "🔍 Detected"])
+            with img_orig_tab:
+                st.image(st.session_state.last_pil_img, use_container_width=True)
+                st.markdown('<p class="img-caption">Original photo</p>', unsafe_allow_html=True)
+            with img_det_tab:
+                if st.session_state.last_annotated_pil is not None:
+                    st.image(st.session_state.last_annotated_pil, use_container_width=True)
                     st.markdown('<p class="img-caption">YOLO Detections</p>', unsafe_allow_html=True)
 
-                st.markdown("---")
-                _render_detections(st.session_state.last_detections, quest_items)
+            st.markdown("---")
+            _render_detections(st.session_state.last_detections, quest_items)
+
+            # Project suggestions derived from detections
+            detected_names = [d.class_name for d in st.session_state.last_detections]
+            suggestions    = get_project_suggestions(detected_names, max_results=3)
+            _render_project_cards(suggestions)
 
 
 # ══ TAB 2 – Live Camera ═══════════════════════════════════════════════════════
@@ -861,7 +1219,8 @@ with tab_cam:
         )
         st.markdown(cam_status, unsafe_allow_html=True)
 
-        frame_placeholder = st.empty()
+        frame_placeholder   = st.empty()
+        cam_projects_slot   = st.empty()
 
         if st.session_state.webcam_running:
             cap = cv2.VideoCapture(0)
@@ -879,6 +1238,7 @@ with tab_cam:
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
             try:
+                frame_count = 0
                 while st.session_state.webcam_running:
                     ret, frame_bgr = cap.read()
                     if not ret:
@@ -898,6 +1258,14 @@ with tab_cam:
                         caption="Live YOLO Detections",
                     )
 
+                    # Refresh project suggestions every 60 frames
+                    frame_count += 1
+                    if frame_count % 60 == 0 and detections:
+                        detected_names = [d.class_name for d in detections]
+                        suggestions    = get_project_suggestions(detected_names, max_results=2)
+                        with cam_projects_slot.container():
+                            _render_project_cards(suggestions)
+
                     if st.session_state.quest_completed:
                         break
 
@@ -905,16 +1273,43 @@ with tab_cam:
             finally:
                 cap.release()
 
+        # Show project suggestions from last captured detections
+        if not st.session_state.webcam_running and st.session_state.last_detections:
+            detected_names = [d.class_name for d in st.session_state.last_detections]
+            suggestions    = get_project_suggestions(detected_names, max_results=3)
+            with cam_projects_slot.container():
+                _render_project_cards(suggestions)
+
+
 # ── Trophy case ───────────────────────────────────────────────────────────────
 st.markdown("---")
 progress = load_progress()
 _render_trophy_case(progress.get("trophies", []))
 
+# ── ⚙️ Scanner Settings (power users find it; casual users never see it) ──────
+with st.expander("⚙️ Scanner Settings", expanded=False):
+    col_s1, col_s2 = st.columns(2)
+    with col_s1:
+        st.slider(
+            "Confidence",
+            min_value=0.10,
+            max_value=1.00,
+            step=0.05,
+            key="scan_confidence",
+        )
+    with col_s2:
+        st.selectbox(
+            "YOLO Variant",
+            ["yolo26n.pt", "yolo26s.pt", "yolo26m.pt", "yolo26l.pt", "yolo26x.pt"],
+            help="n = fastest · x = most accurate",
+            key="scan_model",
+        )
+
 # ── Footer ────────────────────────────────────────────────────────────────────
-best = progress.get("best_time")
+best     = progress.get("best_time")
 best_str = (
     f"{int(best // 60)}m {int(best % 60)}s" if best and best >= 60 else
-    f"{int(best)}s" if best else "—"
+    f"{int(best)}s"                          if best               else "—"
 )
 total_q = progress.get("total_quests_completed", 0)
 st.markdown(
@@ -922,5 +1317,30 @@ st.markdown(
     f"Quests completed: {total_q} · Best time: {best_str} · "
     f"<a href='https://docs.ultralytics.com/models/yolo26/' "
     f"style='color:#334155'>YOLO26</a></p>",
+    unsafe_allow_html=True,
+)
+
+# ── Mobile bottom nav bar (fixed, shown only on screens ≤640px via CSS) ───────
+_streak  = progress.get("streak", 0)
+_score   = st.session_state.session_score
+_n_found = len(st.session_state.quest_found)
+
+st.markdown(
+    f"""
+    <div class="mobile-nav-bar">
+        <div class="nav-item streak">
+            <span class="nav-icon">🔥</span>
+            {_streak} streak
+        </div>
+        <div class="nav-item score">
+            <span class="nav-icon">⭐</span>
+            {_score} pts
+        </div>
+        <div class="nav-item found">
+            <span class="nav-icon">🎯</span>
+            {_n_found}/5 found
+        </div>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
