@@ -633,6 +633,28 @@ st.markdown(
         margin-bottom: 14px;
     }
     .project-empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+    .stem-badge {
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        padding: 2px 9px;
+        border-radius: 20px;
+        border: 1px solid;
+    }
+    .project-learn {
+        background: linear-gradient(145deg, #0f1520, #0c121e);
+        border: 1px solid #2a3347;
+        border-left: 3px solid #ff8f3d;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        color: #c8d1df;
+        margin: 10px 0 14px 0;
+        line-height: 1.5;
+    }
 
     /* ── Streamlit controls skin ─────────────────────────── */
     div.stButton > button, div.stDownloadButton > button {
@@ -1174,13 +1196,37 @@ def _render_project_cards(suggestions: list[dict]) -> None:
         )
         materials_str = ", ".join(p.get("materials", []))
 
+        stem_tag  = p.get("stem_tag", "")
+        learn_txt = p.get("learn", "")
+
+        _stem_colours = {
+            "Science":     ("rgba(56,189,248,0.14)", "#38bdf8", "#9fdcff"),
+            "Engineering": ("rgba(255,106,0,0.14)",  "#ff6a00", "#ffd0aa"),
+            "Technology":  ("rgba(168,85,247,0.14)", "#a855f7", "#d4a7ff"),
+            "Math":        ("rgba(34,197,94,0.14)",  "#22c55e", "#7cf2a8"),
+        }
+        s_bg, s_border, s_color = _stem_colours.get(
+            stem_tag, ("rgba(100,116,139,0.14)", "#64748b", "#94a3b8")
+        )
+        stem_badge = (
+            f'<span class="stem-badge" style="background:{s_bg};border-color:{s_border};color:{s_color};">'
+            f'{stem_tag}</span>'
+        ) if stem_tag else ""
+
+        learn_block = (
+            f'<div class="project-learn">💡 {learn_txt}</div>'
+        ) if learn_txt else ""
+
         st.markdown(
             f"""
             <div class="project-card {card_cls}">
                 <div class="project-header">
                     <div class="project-header-left">
                         <span class="project-emoji">{p['emoji']}</span>
-                        <span class="project-title">{p['title']}</span>
+                        <div>
+                            <span class="project-title">{p['title']}</span>
+                            <div style="margin-top:4px;">{stem_badge}</div>
+                        </div>
                     </div>
                     <span class="project-difficulty-pill pill-{pill_cls}">{pill_lbl}</span>
                 </div>
@@ -1192,6 +1238,7 @@ def _render_project_cards(suggestions: list[dict]) -> None:
                 </div>
                 <hr class="project-divider">
                 <ol class="project-steps">{steps_html}</ol>
+                {learn_block}
                 <button class="project-cta-btn" type="button" disabled>▶ Let's Make It! →</button>
                 <div style="clear:both"></div>
             </div>
