@@ -1270,7 +1270,11 @@ def _render_completed_log() -> None:
 
 # ── Project cards renderer ────────────────────────────────────────────────────
 
-def _render_project_cards(suggestions: list[dict], detected_names: list[str] | None = None) -> None:
+def _render_project_cards(
+    suggestions: list[dict],
+    detected_names: list[str] | None = None,
+    context: str = "default",
+) -> None:
     """Render project suggestion cards as styled craft-instruction cards."""
     if not suggestions:
         st.markdown(
@@ -1361,7 +1365,7 @@ def _render_project_cards(suggestions: list[dict], detected_names: list[str] | N
         )
 
         if not already_done:
-            btn_key = f"complete_{p['title'].replace(' ', '_')}"
+            btn_key = f"complete_{context}_{p['title'].replace(' ', '_')}"
             if st.button("✅ Mark as Complete", key=btn_key, use_container_width=True):
                 p["_objects_detected"] = detected_names or []
                 save_completed_project(p)
@@ -1524,7 +1528,7 @@ with tab_img:
             # Project suggestions derived from detections
             detected_names = [d.class_name for d in st.session_state.last_detections]
             suggestions    = get_project_suggestions(detected_names, max_results=3)
-            _render_project_cards(suggestions, detected_names)
+            _render_project_cards(suggestions, detected_names, context="img")
 
 
 # ══ TAB 2 – Live Camera ═══════════════════════════════════════════════════════
@@ -1614,7 +1618,7 @@ with tab_cam:
                         detected_names = [d.class_name for d in detections]
                         suggestions    = get_project_suggestions(detected_names, max_results=2)
                         with cam_projects_slot.container():
-                            _render_project_cards(suggestions, detected_names)
+                            _render_project_cards(suggestions, detected_names, context="cam_live")
 
                     if st.session_state.quest_completed:
                         break
@@ -1628,7 +1632,7 @@ with tab_cam:
             detected_names = [d.class_name for d in st.session_state.last_detections]
             suggestions    = get_project_suggestions(detected_names, max_results=3)
             with cam_projects_slot.container():
-                _render_project_cards(suggestions, detected_names)
+                _render_project_cards(suggestions, detected_names, context="cam_stopped")
 
 
 # ── Trophy case ───────────────────────────────────────────────────────────────
