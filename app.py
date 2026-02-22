@@ -59,39 +59,22 @@ st.markdown(
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap');
 
-    /* ── Base / chassis ──────────────────────────────────── */
     :root {
-        --bg-main: #2b313f;
-        --bg-shell: #11141c;
-        --bg-panel: #171d2b;
-        --bg-panel-2: #101521;
-        --text-main: #e5e7eb;
-        --text-muted: #8b96a9;
-        --line: #2c3447;
-        --line-soft: #222a3b;
-        --accent: #ff6a00;
-        --accent-soft: #ff8f3d;
-        --accent-glow: rgba(255, 106, 0, 0.35);
+        --glass-bg: rgba(255,255,255,0.5);
+        --glass-border: rgba(255,255,255,0.6);
+        --glass-shadow: 0 4px 30px rgba(0,0,0,0.08);
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --accent: #3b82f6;
         --good: #22c55e;
         --med: #f59e0b;
         --hard: #ef4444;
         --combo: #a855f7;
     }
     html, body, [data-testid="stAppViewContainer"] {
-        background: #000 !important;
-        font-family: 'Nunito', sans-serif;
+        background: #f1f5f9 !important;
+        font-family: 'Inter', system-ui, sans-serif !important;
         color: var(--text-main);
-    }
-    [data-testid="stAppViewContainer"]::before {
-        content: "";
-        position: fixed;
-        inset: 16px;
-        border-radius: 22px;
-        border: 1px solid #3a4358;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 14px 40px rgba(0,0,0,0.45);
-        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
-        pointer-events: none;
-        z-index: 0;
     }
     [data-testid="stSidebar"] { display: none; }
     [data-testid="collapsedControl"] { display: none; }
@@ -108,105 +91,68 @@ st.markdown(
         margin-left: auto;
         margin-right: auto;
     }
-    div[data-testid="stVerticalBlock"] > div:has(> .game-header),
-    div[data-testid="stVerticalBlock"] > div:has(> .quest-board),
-    div[data-testid="stVerticalBlock"] > div:has(> .completion-panel),
-    div[data-testid="stVerticalBlock"] > div:has(> .trophy-shell) {
-        position: relative;
-        z-index: 1;
-    }
-    hr {
-        border-color: var(--line) !important;
-    }
+    hr { border-color: rgba(0,0,0,0.08) !important; }
 
-    /* ── Top HUD shell ───────────────────────────────────── */
+    /* ── Sticky: keep header + tabs + completed in view ───── */
     .game-header {
+        position: sticky;
+        top: 0;
+        z-index: 200;
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        background: linear-gradient(155deg, #0f131d 0%, #171c29 65%, #10141f 100%);
-        border: 1px solid #2d3548;
-        border-radius: 18px;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 16px;
         padding: 14px 18px;
         margin-bottom: 14px;
         gap: 10px;
         flex-wrap: wrap;
-        box-shadow: 0 8px 28px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.03);
+        box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
-    .hud-left {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        min-width: 0;
-    }
+    .hud-left { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
     .game-title {
-        font-family: 'Nunito', sans-serif;
-        font-size: 1.8rem;
-        line-height: 1.05;
-        letter-spacing: 1.2px;
-        font-weight: 900;
-        color: #f3f4f6;
-        text-transform: uppercase;
-        white-space: nowrap;
-        text-shadow: 0 0 16px rgba(255,255,255,0.06);
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-main);
+        letter-spacing: -0.02em;
     }
-    .hud-nav {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        font-size: 0.72rem;
-        font-weight: 800;
-        letter-spacing: 0.7px;
-        text-transform: uppercase;
-    }
-    .hud-nav-item {
-        color: #7f8aa0;
-        padding: 4px 0;
-        border-bottom: 2px solid transparent;
-    }
-    .hud-nav-item.active {
-        color: #e5e7eb;
-        border-bottom-color: var(--accent);
-        text-shadow: 0 0 12px var(--accent-glow);
-    }
-    .hud-badges {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
+    .hud-nav { display: flex; align-items: center; gap: 16px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); }
+    .hud-nav-item { padding: 4px 0; border-bottom: 2px solid transparent; }
+    .hud-nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .hud-badges { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .hud-badge {
-        background: linear-gradient(145deg, #141a28, #101522);
-        border: 1px solid #2a3244;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.7);
         border-radius: 12px;
         padding: 8px 14px;
-        font-size: 0.95rem;
-        font-weight: 900;
+        font-size: 0.9rem;
+        font-weight: 600;
         color: var(--text-main);
         white-space: nowrap;
-        min-height: 48px;
+        min-height: 44px;
         display: flex;
         align-items: center;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
-    .hud-badge.streak { border-color: rgba(255,106,0,0.45); color: #ff9a52; }
-    .hud-badge.score  { border-color: #4b556b; color: #d1d5db; }
-    .hud-badge.timer  { border-color: rgba(56,189,248,0.35); color: #9fdcff; }
+    .hud-badge.streak { color: #ea580c; }
+    .hud-badge.score  { color: var(--text-main); }
+    .hud-badge.timer  { color: #0284c7; }
 
-    /* ── Quest board panel ───────────────────────────────── */
+    /* ── Glass: Quest board ───────────────────────────────── */
     .quest-board {
-        background: linear-gradient(155deg, #111621 0%, #171d2b 55%, #0f131e 100%);
-        border: 1px solid #2d3548;
-        border-radius: 18px;
+        background: rgba(255,255,255,0.55);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.65);
+        border-radius: 16px;
         padding: 18px;
         margin-bottom: 14px;
-        animation: boardIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-        box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.02);
-    }
-    @keyframes boardIn {
-        from { transform: translateY(-30px) scale(0.95); opacity: 0; }
-        to   { transform: translateY(0)     scale(1);    opacity: 1; }
+        box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
     .quest-board-header {
         display: flex;
@@ -217,22 +163,20 @@ st.markdown(
         flex-wrap: wrap;
     }
     .quest-board-title {
-        font-family: 'Nunito', sans-serif;
-        font-size: 1.12rem;
-        color: #f3f4f6;
-        letter-spacing: 1.1px;
-        text-transform: uppercase;
-        font-weight: 900;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-main);
     }
     .quest-progress-pill {
-        background: linear-gradient(145deg, #1a2233, #121928);
-        border: 1px solid #2e394d;
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgba(255,255,255,0.8);
         border-radius: 20px;
         padding: 6px 12px;
-        font-weight: 900;
-        font-size: 0.88rem;
-        color: #f8fafc;
-        box-shadow: inset 0 0 10px rgba(255,106,0,0.12);
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-main);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     }
 
     /* ── Quest tiles grid ────────────────────────────────── */
@@ -275,72 +219,62 @@ st.markdown(
         padding: 8px;
     }
     .quest-tile-front {
-        background: linear-gradient(145deg, #191f2f, #121927);
-        border: 1px solid #30384b;
-        box-shadow: 0 6px 16px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.02);
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.7);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .quest-tile-front:hover {
-        transform: scale(1.04);
-        border-color: rgba(255,106,0,0.58);
-        box-shadow: 0 8px 26px var(--accent-glow), 0 0 0 1px rgba(255,106,0,0.18);
+        transform: scale(1.03);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
     }
     .quest-tile-back {
-        background: linear-gradient(145deg, #1b2a1e, #10301b);
-        border: 1px solid #2f7a49;
-        box-shadow: 0 4px 20px rgba(34,197,94,0.25);
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(34,197,94,0.4);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
         transform: rotateY(180deg);
     }
     .tile-emoji      { font-size: 2.2rem; line-height: 1; }
-    .tile-name       { font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
-                       letter-spacing: 0.5px; color: #94a3b8; text-align: center; }
-    .tile-checkbox   { font-size: 1.1rem; color: #475569; }
+    .tile-name       { font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+                       letter-spacing: 0.5px; color: var(--text-muted); text-align: center; }
+    .tile-checkbox   { font-size: 1.1rem; color: var(--text-muted); }
     .tile-found-star { font-size: 2rem; line-height: 1; }
-    .tile-found-label{ font-size: 0.7rem; font-weight: 900; color: #4ade80;
-                       text-transform: uppercase; letter-spacing: 1.5px; }
+    .tile-found-label{ font-size: 0.7rem; font-weight: 700; color: #16a34a;
+                       text-transform: uppercase; letter-spacing: 1px; }
 
-    /* ── Progress bar ────────────────────────────────────── */
     .quest-progress-bar {
         height: 8px;
-        background: #121827;
-        border-radius: 4px;
+        background: rgba(0,0,0,0.06);
+        border-radius: 8px;
         margin-top: 14px;
         overflow: hidden;
-        border: 1px solid #222a3b;
     }
     .quest-progress-fill {
         height: 100%;
-        background: linear-gradient(90deg, #ff6a00, #ff8f3d);
-        border-radius: 4px;
+        background: var(--accent);
+        border-radius: 8px;
         transition: width 0.6s ease;
-        box-shadow: 0 0 12px rgba(255,106,0,0.45);
     }
 
-    /* ── Completion panel ────────────────────────────────── */
+    /* ── Glass: Completion panel ───────────────────────────── */
     .completion-panel {
-        background: linear-gradient(145deg, #161d2c, #111725);
-        border: 1px solid #2f384b;
-        border-radius: 20px;
+        background: rgba(255,255,255,0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.7);
+        border-radius: 16px;
         padding: 22px 20px;
         text-align: center;
         margin-bottom: 14px;
-        animation: completionPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-        box-shadow: 0 10px 26px rgba(0,0,0,0.44), inset 0 0 0 1px rgba(255,255,255,0.02);
-    }
-    @keyframes completionPop {
-        from { transform: scale(0.85); opacity: 0; }
-        to   { transform: scale(1);    opacity: 1; }
+        box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
     .completion-title {
-        font-family: 'Nunito', sans-serif;
-        font-size: 2rem;
-        color: #ffb27a;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        font-weight: 900;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text-main);
         margin-bottom: 6px;
-        text-shadow: 0 0 18px rgba(255,106,0,0.28);
     }
     .completion-stats {
         display: flex;
@@ -350,14 +284,16 @@ st.markdown(
         margin: 16px 0;
     }
     .stat-box {
-        background: linear-gradient(145deg, #121a29, #0f1522);
-        border: 1px solid #2c3548;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.7);
         border-radius: 12px;
         padding: 10px 18px;
         text-align: center;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
-    .stat-value { font-size: 1.8rem; font-weight: 900; color: #ff8f3d; }
-    .stat-label { font-size: 0.75rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 1px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .stat-label { font-size: 0.75rem; color: var(--text-muted); }
     .new-trophy-row {
         display: flex;
         gap: 10px;
@@ -366,30 +302,29 @@ st.markdown(
         margin-top: 12px;
     }
     .new-trophy-tag {
-        background: linear-gradient(145deg, #26160a, #1b1107);
-        border: 1px solid #9a5b2c;
+        background: rgba(255,255,255,0.5);
+        border: 1px solid rgba(34,197,94,0.4);
         border-radius: 10px;
         padding: 6px 14px;
-        font-size: 0.9rem;
-        font-weight: 900;
-        color: #ffcc9d;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #16a34a;
     }
 
-    /* ── Trophy case ─────────────────────────────────────── */
+    /* ── Glass: Trophy case ───────────────────────────────── */
     .trophy-shell {
-        background: linear-gradient(145deg, #121826, #0f141f);
-        border: 1px solid #2d3548;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
         border-radius: 16px;
         padding: 14px 14px 8px;
-        box-shadow: 0 10px 26px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(255,255,255,0.02);
+        box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
     .trophy-section-title {
-        font-family: 'Nunito', sans-serif;
         font-size: 1rem;
-        color: #f3f4f6;
-        letter-spacing: 1px;
-        font-weight: 900;
-        text-transform: uppercase;
+        font-weight: 700;
+        color: var(--text-main);
         margin-bottom: 12px;
     }
     .trophy-shelf {
@@ -399,19 +334,20 @@ st.markdown(
         margin-bottom: 24px;
     }
     .trophy-card {
-        background: linear-gradient(145deg, #28170c, #1b1109);
-        border: 1px solid #8d5731;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.7);
         border-radius: 12px;
         padding: 10px 16px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        color: #ffd5aa;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-main);
         position: relative;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
     .trophy-card.locked {
-        background: linear-gradient(145deg, #171e2e, #111724);
-        border-color: #2b3448;
-        color: #667085;
+        background: rgba(255,255,255,0.35);
+        color: var(--text-muted);
         cursor: help;
     }
     .trophy-card.locked:hover::after {
@@ -420,34 +356,38 @@ st.markdown(
         bottom: calc(100% + 8px);
         left: 50%;
         transform: translateX(-50%);
-        background: #1c2434;
-        color: #cdd6e5;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(8px);
+        color: var(--text-main);
         font-size: 0.75rem;
-        font-weight: 700;
+        font-weight: 600;
         padding: 6px 10px;
         border-radius: 8px;
         white-space: nowrap;
         z-index: 100;
         pointer-events: none;
-        border: 1px solid #35435c;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.12);
     }
 
-    /* ── Detection result cards ──────────────────────────── */
+    /* ── Glass: Detection cards ───────────────────────────── */
     .det-card {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: linear-gradient(145deg, #151c2a, #101622);
-        border: 1px solid #2b3447;
-        border-radius: 10px;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-radius: 12px;
         padding: 8px 14px;
         margin-bottom: 6px;
         min-height: 48px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
     }
-    .det-card.quest-hit { border-color: rgba(255,106,0,0.5); background: linear-gradient(145deg, #26170f, #17141b); }
-    .det-label { font-weight: 700; color: #e2e8f0; font-size: 0.9rem; }
-    .det-conf  { font-size: 0.82rem; color: #ff9a52; font-weight: 900; }
-    .det-bonus { font-size: 0.75rem; color: #8da2c8; font-weight: 700; }
+    .det-card.quest-hit { border-color: rgba(59,130,246,0.4); background: rgba(255,255,255,0.6); }
+    .det-label { font-weight: 600; color: var(--text-main); font-size: 0.9rem; }
+    .det-conf  { font-size: 0.82rem; color: var(--accent); font-weight: 600; }
+    .det-bonus { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
 
     /* ── Drag-zone upload ────────────────────────────────── */
 
@@ -461,62 +401,59 @@ st.markdown(
         overflow: hidden;
         border-radius: 14px;
         height: 76px;
-        background: linear-gradient(145deg, #101623, #131a2a);
-        border: 1px solid #303a4f;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 8px 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
     .scan-overlay {
         position: absolute;
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, transparent, #ff8f3d, transparent);
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
         animation: scanDown 1.1s ease-in-out infinite;
         z-index: 10;
-        box-shadow: 0 0 14px rgba(255,143,61,0.85);
+        opacity: 0.8;
     }
     .scan-label {
         position: relative;
         z-index: 11;
-        color: #ffd0aa;
-        font-family: 'Nunito', sans-serif;
-        font-size: 1.1rem;
-        letter-spacing: 1.1px;
-        text-transform: uppercase;
-        font-weight: 900;
+        color: var(--text-main);
+        font-size: 1rem;
+        font-weight: 700;
     }
 
-    /* ── Project cards ───────────────────────────────────── */
+    /* ── Glass: Project cards ─────────────────────────────── */
     .project-section-title {
-        font-family: 'Nunito', sans-serif;
         font-size: 1rem;
-        color: #f3f4f6;
+        font-weight: 700;
+        color: var(--text-main);
         margin: 22px 0 10px 0;
-        font-weight: 900;
-        letter-spacing: 1px;
-        text-transform: uppercase;
     }
     .project-card {
-        background: linear-gradient(150deg, #151b29 0%, #101521 100%);
-        border: 1px solid #2e374b;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
         border-left: 4px solid var(--good);
         border-radius: 14px;
         padding: 18px 20px;
         margin-bottom: 14px;
-        box-shadow: 0 8px 22px rgba(0,0,0,0.44), inset 0 0 0 1px rgba(255,255,255,0.02);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .project-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.52);
+        box-shadow: 0 8px 28px rgba(0,0,0,0.1);
     }
     .project-card.easy   { border-left-color: var(--good); }
     .project-card.medium { border-left-color: var(--med); }
     .project-card.hard   { border-left-color: var(--hard); }
-    .project-card.combo  { border-left-color: var(--combo); border-color: #5f4b84; }
+    .project-card.combo  { border-left-color: var(--combo); }
     .project-header {
         display: flex;
         align-items: flex-start;
@@ -531,42 +468,39 @@ st.markdown(
     }
     .project-emoji { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
     .project-title {
-        font-family: 'Nunito', sans-serif;
         font-size: 1.06rem;
-        color: #e2e8f0;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
-        font-weight: 900;
+        font-weight: 700;
+        color: var(--text-main);
     }
     .project-difficulty-pill {
         border-radius: 20px;
         padding: 3px 12px;
         font-size: 0.78rem;
-        font-weight: 900;
+        font-weight: 600;
         white-space: nowrap;
         flex-shrink: 0;
         min-height: 28px;
         display: flex;
         align-items: center;
     }
-    .pill-easy   { background: rgba(34,197,94,0.14);  border: 1px solid var(--good); color: #7cf2a8; }
-    .pill-medium { background: rgba(245,158,11,0.14); border: 1px solid var(--med); color: #ffcf8a; }
-    .pill-hard   { background: rgba(239,68,68,0.14);  border: 1px solid var(--hard); color: #ff9ca0; }
-    .pill-combo  { background: rgba(168,85,247,0.14); border: 1px solid var(--combo); color: #d4a7ff; }
-    .project-tagline { color: #a8b2c4; font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
-    .project-divider  { border: none; border-top: 1px solid #2a3347; margin: 10px 0; }
+    .pill-easy   { background: rgba(34,197,94,0.12);  border: 1px solid var(--good); color: #16a34a; }
+    .pill-medium { background: rgba(245,158,11,0.12); border: 1px solid var(--med); color: #b45309; }
+    .pill-hard   { background: rgba(239,68,68,0.12);  border: 1px solid var(--hard); color: #dc2626; }
+    .pill-combo  { background: rgba(168,85,247,0.12); border: 1px solid var(--combo); color: #7c3aed; }
+    .project-tagline { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px; line-height: 1.5; }
+    .project-divider  { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 10px 0; }
     .project-meta {
         display: flex;
         gap: 16px;
         font-size: 0.85rem;
-        color: #64748b;
+        color: var(--text-muted);
         flex-wrap: wrap;
         margin-bottom: 10px;
     }
-    .project-meta strong { color: #c8d1df; }
+    .project-meta strong { color: var(--text-main); }
     .project-steps { list-style: none; padding: 0; margin: 8px 0 14px 0; }
     .project-steps li {
-        color: #cbd5e1;
+        color: var(--text-main);
         font-size: 0.88rem;
         padding: 4px 0 4px 22px;
         position: relative;
@@ -576,39 +510,34 @@ st.markdown(
         content: attr(data-n) ".";
         position: absolute;
         left: 0;
-        color: var(--accent-soft);
-        font-weight: 900;
+        color: var(--accent);
+        font-weight: 600;
     }
     .project-cta-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 6px;
-        background: linear-gradient(90deg, #ff6a00, #ff8f3d);
+        background: var(--accent);
         color: #fff !important;
-        font-family: 'Nunito', sans-serif;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         padding: 10px 20px;
-        border-radius: 10px;
+        border-radius: 12px;
         border: none;
         cursor: default;
         text-decoration: none !important;
         min-height: 48px;
         margin-top: 10px;
-        letter-spacing: 0.6px;
-        text-transform: uppercase;
-        font-weight: 900;
-        box-shadow: 0 6px 18px rgba(255,106,0,0.34);
-        opacity: 0.92;
+        font-weight: 600;
         width: 100%;
     }
     .project-empty-state {
         text-align: center;
         padding: 28px 20px;
-        background: linear-gradient(145deg, #151c2b, #101621);
-        border: 1px dashed #3a455e;
+        background: rgba(255,255,255,0.4);
+        border: 1px dashed rgba(0,0,0,0.12);
         border-radius: 14px;
-        color: #9aa7bd;
+        color: var(--text-muted);
         font-size: 0.95rem;
         margin-bottom: 14px;
     }
@@ -617,67 +546,65 @@ st.markdown(
         display: inline-flex;
         align-items: center;
         font-size: 0.7rem;
-        font-weight: 900;
-        letter-spacing: 0.8px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
         padding: 2px 9px;
         border-radius: 20px;
         border: 1px solid;
     }
     .project-learn {
-        background: linear-gradient(145deg, #0f1520, #0c121e);
-        border: 1px solid #2a3347;
-        border-left: 3px solid #ff8f3d;
+        background: rgba(255,255,255,0.5);
+        border: 1px solid rgba(255,255,255,0.6);
+        border-left: 3px solid var(--accent);
         border-radius: 8px;
         padding: 8px 12px;
         font-size: 0.85rem;
-        color: #c8d1df;
+        color: var(--text-main);
         margin: 10px 0 14px 0;
         line-height: 1.5;
     }
-    /* ── Completed project state ─────────────────────────── */
     .project-done-badge {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         background: rgba(34,197,94,0.12);
         border: 1px solid #22c55e;
-        color: #4ade80;
+        color: #16a34a;
         font-size: 0.85rem;
-        font-weight: 900;
-        letter-spacing: 0.5px;
+        font-weight: 600;
         padding: 8px 16px;
         border-radius: 10px;
         margin-top: 10px;
         width: 100%;
         justify-content: center;
     }
-    /* ── Completed projects log panel ────────────────────── */
+    /* ── Glass: Completed projects log panel ───────────────── */
     .cp-panel {
-        background: linear-gradient(145deg, #12192a, #0f1520);
-        border: 1px solid #2c3850;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
         border-radius: 14px;
         padding: 14px 18px;
         margin-bottom: 18px;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
     .cp-panel-title {
-        font-family: 'Fredoka One', sans-serif;
         font-size: 1.1rem;
-        color: #ff8f3d;
-        letter-spacing: 0.5px;
+        font-weight: 700;
+        color: var(--text-main);
         margin-bottom: 12px;
     }
-    /* ── Completed project row — collapsible <details> ──── */
     details.cp-row {
         border-radius: 8px;
-        background: rgba(255,255,255,0.03);
-        border: 1px solid #1e2a3e;
+        background: rgba(255,255,255,0.35);
+        border: 1px solid rgba(255,255,255,0.5);
         margin-bottom: 7px;
         overflow: hidden;
         transition: border-color 0.15s;
     }
     details.cp-row:last-child { margin-bottom: 0; }
-    details.cp-row[open] { border-color: #3a4f6e; }
+    details.cp-row[open] { border-color: rgba(59,130,246,0.4); }
     summary.cp-summary {
         display: flex;
         align-items: center;
@@ -692,41 +619,40 @@ st.markdown(
         content: "›";
         margin-left: auto;
         font-size: 1.1rem;
-        color: #4a5e7a;
+        color: var(--text-muted);
         transition: transform 0.2s;
         flex-shrink: 0;
     }
     details.cp-row[open] > summary.cp-summary::after {
         transform: rotate(90deg);
-        color: #ff8f3d;
+        color: var(--accent);
     }
-    summary.cp-summary:hover { background: rgba(255,106,0,0.06); }
+    summary.cp-summary:hover { background: rgba(59,130,246,0.06); }
     .cp-emoji { font-size: 1.4rem; flex-shrink: 0; }
     .cp-info  { flex: 1; min-width: 0; }
-    .cp-title { font-weight: 900; color: #e2e8f0; font-size: 0.9rem; }
-    .cp-meta  { color: #6b7f9a; font-size: 0.75rem; margin-top: 2px; }
+    .cp-title { font-weight: 700; color: var(--text-main); font-size: 0.9rem; }
+    .cp-meta  { color: var(--text-muted); font-size: 0.75rem; margin-top: 2px; }
     .cp-stem  {
-        font-size: 0.7rem; font-weight: 900; letter-spacing: 0.6px;
+        font-size: 0.7rem; font-weight: 600; letter-spacing: 0.5px;
         text-transform: uppercase; padding: 2px 8px;
         border-radius: 20px; border: 1px solid; flex-shrink: 0;
     }
-    /* Expanded body of the row */
     .cp-detail {
         padding: 0 12px 12px 12px;
-        border-top: 1px solid #1e2a3e;
+        border-top: 1px solid rgba(0,0,0,0.06);
     }
     .cp-tagline {
         font-size: 0.83rem;
-        color: #8fa3be;
+        color: var(--text-muted);
         font-style: italic;
         margin: 8px 0 6px 0;
         line-height: 1.4;
     }
     .cp-learn {
         font-size: 0.8rem;
-        color: #c8d1df;
-        background: rgba(255,106,0,0.07);
-        border-left: 3px solid #ff6a00;
+        color: var(--text-main);
+        background: rgba(59,130,246,0.08);
+        border-left: 3px solid var(--accent);
         border-radius: 0 6px 6px 0;
         padding: 5px 10px;
         margin-top: 6px;
@@ -734,18 +660,18 @@ st.markdown(
     }
     .cp-section-label {
         font-size: 0.72rem;
-        font-weight: 900;
-        letter-spacing: 0.8px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        color: #ff8f3d;
+        color: var(--accent);
         margin: 10px 0 5px 0;
     }
     .cp-mat-list { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
     .cp-mat-chip {
         font-size: 0.73rem;
-        color: #9bb5d0;
-        background: rgba(255,255,255,0.05);
-        border: 1px solid #2a3750;
+        color: var(--text-muted);
+        background: rgba(255,255,255,0.5);
+        border: 1px solid rgba(255,255,255,0.6);
         border-radius: 20px;
         padding: 2px 9px;
     }
@@ -762,7 +688,7 @@ st.markdown(
         align-items: flex-start;
         gap: 8px;
         font-size: 0.8rem;
-        color: #c0cfe0;
+        color: var(--text-main);
         line-height: 1.45;
     }
     .cp-step-n {
@@ -770,60 +696,50 @@ st.markdown(
         width: 20px;
         height: 20px;
         border-radius: 50%;
-        background: rgba(255,106,0,0.18);
-        border: 1px solid #ff6a00;
-        color: #ff8f3d;
+        background: rgba(59,130,246,0.12);
+        border: 1px solid var(--accent);
+        color: var(--accent);
         font-size: 0.65rem;
-        font-weight: 900;
+        font-weight: 600;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-top: 1px;
     }
-    /* Mark Complete button — green instead of orange */
     div[data-testid="stButton"] button[kind="secondary"] {
-        background: linear-gradient(90deg, #16a34a, #22c55e) !important;
-        border-color: #4ade80 !important;
-        box-shadow: 0 4px 12px rgba(34,197,94,0.28) !important;
+        background: rgba(34,197,94,0.9) !important;
+        border-color: #22c55e !important;
+        color: #fff !important;
     }
 
-    /* ── Streamlit controls skin ─────────────────────────── */
+    /* ── Glass: Streamlit buttons ─────────────────────────── */
     div.stButton > button, div.stDownloadButton > button {
-        background: linear-gradient(90deg, #ff6a00, #ff8f3d) !important;
+        background: var(--accent) !important;
         color: white !important;
-        border: 1px solid #ff9a52 !important;
+        border: 1px solid rgba(255,255,255,0.3) !important;
         border-radius: 12px !important;
         min-height: 48px !important;
-        font-weight: 900 !important;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        box-shadow: 0 6px 16px rgba(255,106,0,0.28);
+        font-weight: 600 !important;
     }
     div.stButton > button:hover, div.stDownloadButton > button:hover {
         filter: brightness(1.05);
-        border-color: #ffc38f !important;
     }
-    /* ── File uploader: styled as the drag zone ─────────── */
     div[data-testid="stFileUploader"] > label {
-        font-family: 'Nunito', sans-serif !important;
         font-size: 1rem !important;
-        font-weight: 900 !important;
-        letter-spacing: 0.5px;
-        color: #e2e8f0 !important;
-        text-transform: uppercase;
+        font-weight: 600 !important;
+        color: var(--text-main) !important;
     }
     div[data-testid="stFileUploader"] section {
-        background: linear-gradient(145deg, #121926, #0f1521) !important;
-        border: 2px dashed #3b465f !important;
+        background: rgba(255,255,255,0.5) !important;
+        backdrop-filter: blur(8px);
+        border: 2px dashed rgba(0,0,0,0.12) !important;
         border-radius: 18px !important;
         padding: 20px 24px 24px !important;
         text-align: center;
-        transition: border-color 0.2s ease, background 0.2s ease;
-        position: relative;
+        transition: border-color 0.2s ease;
     }
     div[data-testid="stFileUploader"] section:hover {
-        border-color: #ff8f3d !important;
-        background: linear-gradient(145deg, #171f31, #121927) !important;
+        border-color: var(--accent) !important;
     }
     /* Large camera icon injected above the native text */
     div[data-testid="stFileUploader"] section::before {
@@ -844,8 +760,8 @@ st.markdown(
         margin: 8px 0 0 0 !important;
     }
     div[data-testid="stFileUploader"] li {
-        background: linear-gradient(145deg, #141c2d, #101621) !important;
-        border: 1px solid #2c3850 !important;
+        background: rgba(255,255,255,0.5) !important;
+        border: 1px solid rgba(255,255,255,0.6) !important;
         border-radius: 10px !important;
         overflow: hidden !important;
     }
@@ -858,7 +774,7 @@ st.markdown(
         transition: background 0.15s;
     }
     div[data-testid="stFileUploaderFile"]:hover {
-        background: rgba(255,106,0,0.08) !important;
+        background: rgba(59,130,246,0.08) !important;
     }
     div[data-testid="stFileUploaderFileData"] {
         flex: 1;
@@ -866,24 +782,24 @@ st.markdown(
     }
     div[data-testid="stFileUploaderFileName"] {
         font-size: 0.82rem !important;
-        font-weight: 700 !important;
-        color: #c8d5e8 !important;
+        font-weight: 600 !important;
+        color: var(--text-main) !important;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    /* Progress bar inside file chip */
     div[data-testid="stFileUploader"] [role="progressbar"] {
         height: 3px !important;
         border-radius: 2px;
-        background: #1e2a3e !important;
+        background: rgba(0,0,0,0.08) !important;
     }
     div[data-testid="stFileUploader"] [role="progressbar"] > div {
         background: var(--accent) !important;
     }
     div[data-testid="stExpander"] details {
-        background: linear-gradient(145deg, #131a27, #101621);
-        border: 1px solid #2f394d;
+        background: rgba(255,255,255,0.5);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.6);
         border-radius: 12px;
         padding: 6px 8px;
     }
@@ -891,29 +807,40 @@ st.markdown(
         background-color: var(--accent) !important;
     }
 
-    /* ── Tabs: dashboard strips ──────────────────────────── */
     div[data-testid="stTabs"] {
-        background: linear-gradient(145deg, #121826, #0f141f);
-        border: 1px solid #2d3548;
+        position: sticky;
+        top: 72px;
+        z-index: 150;
+        background: rgba(255,255,255,0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.6);
         border-radius: 14px;
         padding: 8px 10px 10px;
         margin-top: 8px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+        box-shadow: 0 4px 24px rgba(0,0,0,0.06);
     }
-    /* ── Bottom mobile nav ───────────────────────────────── */
     .mobile-nav-bar { display: none; }
 
-    /* ── Settings expander ───────────────────────────────── */
-    details summary { color: #d7deeb !important; font-size: 0.9rem; font-weight: 800; }
+    details summary { color: var(--text-main) !important; font-size: 0.9rem; font-weight: 600; }
 
-    /* ── Misc helpers ────────────────────────────────────── */
-    .img-caption { text-align: center; color: #a0aec0; font-size: 0.82rem; margin-top: 4px; }
+    .img-caption { text-align: center; color: var(--text-muted); font-size: 0.82rem; margin-top: 4px; }
     div[data-testid="stTabs"] button {
-        font-family: 'Nunito', sans-serif;
-        font-weight: 900;
-        text-transform: uppercase;
+        font-weight: 600;
         font-size: 0.78rem;
-        letter-spacing: 0.7px;
+    }
+    /* Keep tab labels and expander summary visible in all states */
+    div[data-testid="stTabs"] button p,
+    div[data-testid="stTabs"] [data-cursor-element-id] {
+        color: var(--text-main) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+    div[data-testid="stExpander"] summary,
+    div[data-testid="stExpander"] details summary {
+        color: var(--text-main) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     /* ── Mobile: 640px breakpoint ────────────────────────── */
@@ -933,7 +860,6 @@ st.markdown(
         .trophy-card  { font-size: 0.78rem; padding: 8px 12px; }
         body { padding-bottom: 64px; }
 
-        /* Show bottom nav on mobile */
         .mobile-nav-bar {
             display: flex;
             position: fixed;
@@ -941,21 +867,22 @@ st.markdown(
             left: 0;
             right: 0;
             z-index: 9999;
-            background: rgba(14, 18, 28, 0.9);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border-top: 1px solid #36435f;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(255,255,255,0.8);
             padding: 8px 16px;
             justify-content: space-around;
             align-items: center;
             gap: 8px;
             font-size: 0.82rem;
-            font-weight: 900;
+            font-weight: 600;
+            box-shadow: 0 -4px 24px rgba(0,0,0,0.06);
         }
-        .nav-item         { display: flex; flex-direction: column; align-items: center; gap: 2px; color: #64748b; }
-        .nav-item.streak  { color: #ffb27a; }
-        .nav-item.score   { color: #e2e8f0; }
-        .nav-item.found   { color: #86efac; }
+        .nav-item         { display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--text-muted); }
+        .nav-item.streak  { color: #ea580c; }
+        .nav-item.score   { color: var(--text-main); }
+        .nav-item.found   { color: #16a34a; }
         .nav-icon         { font-size: 1.1rem; }
     }
 
@@ -1131,6 +1058,23 @@ def _render_header(streak: int, score: int, quest_start: float, completed: bool)
                 <span class="hud-badge streak">🔥 Streak: {streak}</span>
                 <span class="hud-badge score">⭐ {score} pts</span>
                 {timer_html}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def _render_header_simple() -> None:
+    """Minimal header for Detect mode (no streak/timer/quest)."""
+    st.markdown(
+        """
+        <div class="game-header">
+            <div class="hud-left">
+                <span class="game-title">YOLOVision</span>
+                <div class="hud-nav">
+                    <span class="hud-nav-item active">Detect</span>
+                </div>
             </div>
         </div>
         """,
@@ -1579,72 +1523,22 @@ def _render_project_cards(
 progress    = load_progress()
 quest_items = st.session_state.quest_items
 quest_found = st.session_state.quest_found
-
-# ── Read scanner settings from session state (set by expander below) ──────────
-confidence   = st.session_state.scan_confidence
+confidence  = st.session_state.scan_confidence
 model_choice = st.session_state.scan_model
+model      = load_model(model_choice)
 
-# ── Header ────────────────────────────────────────────────────────────────────
-_render_header(
-    streak=progress.get("streak", 0),
-    score=st.session_state.session_score,
-    quest_start=st.session_state.quest_start_time,
-    completed=st.session_state.quest_completed,
-)
+tab_detect, tab_quest = st.tabs(["🔍 Detect", "🎯 Scavenger Hunt"])
 
-# ── Quest board (placeholder for in-place updates) ────────────────────────────
-quest_board_slot = st.empty()
-sound_slot       = st.empty()
+# ═══════════════════════════════════════════════════════════════════════════════
+# TAB: DETECT (core object detection, no quest)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-with quest_board_slot.container():
-    st.markdown(_quest_board_html(quest_items, quest_found), unsafe_allow_html=True)
+with tab_detect:
+    _render_header_simple()
+    tab_img_d, tab_cam_d = st.tabs(["📸 Upload a Photo", "📷 Live Camera"])
+    _render_completed_log()
 
-# ── Completion panel + action buttons ─────────────────────────────────────────
-if st.session_state.quest_completed:
-    comp_time = st.session_state.quest_comp_time or 0.0
-    speed_run = comp_time <= 60
-    _render_completion(
-        comp_time=comp_time,
-        score=st.session_state.session_score,
-        new_trophies=st.session_state.new_trophies,
-        speed_run=speed_run,
-    )
-
-    col_btn, col_share = st.columns(2, gap="small")
-    with col_btn:
-        if st.button("🎲 New Quest!", use_container_width=True, type="primary"):
-            _new_quest()
-            st.rerun()
-    with col_share:
-        card_img = _make_share_card(quest_items, quest_found, comp_time, st.session_state.session_score)
-        buf = io.BytesIO()
-        card_img.save(buf, format="PNG")
-        st.download_button(
-            label="📤 Save Card",
-            data=buf.getvalue(),
-            file_name="scavenger_hunt_result.png",
-            mime="image/png",
-            use_container_width=True,
-        )
-
-# ── Pending sound ─────────────────────────────────────────────────────────────
-if st.session_state.pending_sound:
-    _inject_sound(st.session_state.pending_sound)
-    st.session_state.pending_sound = None
-
-# ── Load model (uses settings from session state) ─────────────────────────────
-model = load_model(model_choice)
-
-# ── Detection tabs ────────────────────────────────────────────────────────────
-tab_img, tab_cam = st.tabs(["📸 Upload a Photo", "📷 Live Camera"])
-
-
-# ══ TAB 1 – Image Upload ══════════════════════════════════════════════════════
-
-with tab_img:
-    if st.session_state.quest_completed:
-        st.info("Quest complete! Start a new quest above to keep scanning.")
-    else:
+    with tab_img_d:
         uploaded = st.file_uploader(
             "📷  Drag a photo here, or click to browse",
             type=["jpg", "jpeg", "png"],
@@ -1691,14 +1585,12 @@ with tab_img:
                 st.session_state.last_pil_img       = pil_img
                 st.session_state.last_annotated_pil = annotated_pil
                 st.session_state.last_detections    = detections
-                _handle_detections(detections, quest_board_slot, sound_slot)
 
         # Display results (persists across reruns while same file is uploaded)
         if (
             st.session_state.last_detections is not None
             and st.session_state.last_pil_img is not None
         ):
-            # Image tabs (replaces two-column layout — stacks cleanly on mobile)
             img_orig_tab, img_det_tab = st.tabs(["🖼 Original", "🔍 Detected"])
             with img_orig_tab:
                 st.image(st.session_state.last_pil_img, use_container_width=True)
@@ -1709,23 +1601,14 @@ with tab_img:
                     st.markdown('<p class="img-caption">YOLO Detections</p>', unsafe_allow_html=True)
 
             st.markdown("---")
-            _render_detections(st.session_state.last_detections, quest_items)
+            _render_detections(st.session_state.last_detections, [])
 
-            # Project suggestions derived from detections
             detected_names = [d.class_name for d in st.session_state.last_detections]
             suggestions    = get_project_suggestions(detected_names, max_results=3)
             _render_project_cards(suggestions, detected_names, context="img")
 
-
-# ══ TAB 2 – Live Camera ═══════════════════════════════════════════════════════
-
-with tab_cam:
-    if st.session_state.quest_completed:
-        st.info("Quest complete! Start a new quest above to keep scanning.")
-    else:
-        st.markdown(
-            "📷 **Point your camera** at objects around the room to find your quest items!"
-        )
+    with tab_cam_d:
+        st.markdown("📷 **Point your camera** at objects to detect — no quest required.")
 
         if "webcam_running" not in st.session_state:
             st.session_state.webcam_running = False
@@ -1788,8 +1671,6 @@ with tab_cam:
                     ann_bgr, detections = run_inference(model, frame_bgr, confidence)
                     st.session_state.last_detections = detections
 
-                    _handle_detections(detections, quest_board_slot, sound_slot)
-
                     ann_rgb = cv2.cvtColor(ann_bgr, cv2.COLOR_BGR2RGB)
                     frame_placeholder.image(
                         ann_rgb,
@@ -1798,16 +1679,12 @@ with tab_cam:
                         caption="Live YOLO Detections",
                     )
 
-                    # Refresh project suggestions every 60 frames
                     frame_count += 1
                     if frame_count % 60 == 0 and detections:
                         detected_names = [d.class_name for d in detections]
                         suggestions    = get_project_suggestions(detected_names, max_results=2)
                         with cam_projects_slot.container():
                             _render_project_cards(suggestions, detected_names, context="cam_live")
-
-                    if st.session_state.quest_completed:
-                        break
 
                     time.sleep(0.05)
             finally:
@@ -1821,13 +1698,176 @@ with tab_cam:
                 _render_project_cards(suggestions, detected_names, context="cam_stopped")
 
 
-# ── Trophy case ───────────────────────────────────────────────────────────────
-st.markdown("---")
-progress = load_progress()
-_render_trophy_case(progress.get("trophies", []))
+# ═══════════════════════════════════════════════════════════════════════════════
+# TAB: SCAVENGER HUNT (quest mode)
+# ═══════════════════════════════════════════════════════════════════════════════
 
-# ── Completed projects log ────────────────────────────────────────────────────
-_render_completed_log()
+with tab_quest:
+    _render_header(
+        streak=progress.get("streak", 0),
+        score=st.session_state.session_score,
+        quest_start=st.session_state.quest_start_time,
+        completed=st.session_state.quest_completed,
+    )
+    quest_board_slot = st.empty()
+    sound_slot       = st.empty()
+    with quest_board_slot.container():
+        st.markdown(_quest_board_html(quest_items, quest_found), unsafe_allow_html=True)
+
+    if st.session_state.quest_completed:
+        comp_time = st.session_state.quest_comp_time or 0.0
+        speed_run = comp_time <= 60
+        _render_completion(
+            comp_time=comp_time,
+            score=st.session_state.session_score,
+            new_trophies=st.session_state.new_trophies,
+            speed_run=speed_run,
+        )
+        col_btn, col_share = st.columns(2, gap="small")
+        with col_btn:
+            if st.button("🎲 New Quest!", use_container_width=True, type="primary", key="new_quest_btn"):
+                _new_quest()
+                st.rerun()
+        with col_share:
+            card_img = _make_share_card(quest_items, quest_found, comp_time, st.session_state.session_score)
+            buf = io.BytesIO()
+            card_img.save(buf, format="PNG")
+            st.download_button(
+                label="📤 Save Card",
+                data=buf.getvalue(),
+                file_name="scavenger_hunt_result.png",
+                mime="image/png",
+                use_container_width=True,
+                key="share_card_btn",
+            )
+
+    if st.session_state.pending_sound:
+        _inject_sound(st.session_state.pending_sound)
+        st.session_state.pending_sound = None
+
+    tab_img, tab_cam = st.tabs(["📸 Upload a Photo", "📷 Live Camera"])
+    _render_completed_log()
+
+    with tab_img:
+        if st.session_state.quest_completed:
+            st.info("Quest complete! Start a new quest above to keep scanning.")
+        else:
+            uploaded_q = st.file_uploader(
+                "📷  Drag a photo here, or click to browse",
+                type=["jpg", "jpeg", "png"],
+                key="quest_upload",
+            )
+            if uploaded_q is not None:
+                file_id = f"{uploaded_q.name}_{uploaded_q.size}"
+                if file_id != st.session_state.last_img_id:
+                    st.session_state.last_img_id = file_id
+                    try:
+                        raw = uploaded_q.read()
+                        pil_img = Image.open(io.BytesIO(raw))
+                        pil_img.verify()
+                        pil_img = Image.open(io.BytesIO(raw)).convert("RGB")
+                    except Exception as exc:
+                        st.error(f"⚠️ Couldn't open image: `{exc}`")
+                        st.stop()
+                    scan_slot_q = st.empty()
+                    scan_slot_q.markdown(
+                        """<div class="scan-container"><div class="scan-overlay"></div><div class="scan-label">🔍&nbsp; Scanning for objects…</div></div>""",
+                        unsafe_allow_html=True,
+                    )
+                    try:
+                        annotated_bgr, detections = run_inference(model, pil_img, confidence)
+                        annotated_pil = bgr_to_pil(annotated_bgr)
+                    except Exception as exc:
+                        scan_slot_q.empty()
+                        st.error(f"⚠️ Inference failed: `{exc}`")
+                        st.stop()
+                    scan_slot_q.empty()
+                    st.session_state.last_pil_img = pil_img
+                    st.session_state.last_annotated_pil = annotated_pil
+                    st.session_state.last_detections = detections
+                    _handle_detections(detections, quest_board_slot, sound_slot)
+            if (
+                st.session_state.last_detections is not None
+                and st.session_state.last_pil_img is not None
+            ):
+                img_orig_tab_q, img_det_tab_q = st.tabs(["🖼 Original", "🔍 Detected"])
+                with img_orig_tab_q:
+                    st.image(st.session_state.last_pil_img, use_container_width=True)
+                    st.markdown('<p class="img-caption">Original photo</p>', unsafe_allow_html=True)
+                with img_det_tab_q:
+                    if st.session_state.last_annotated_pil is not None:
+                        st.image(st.session_state.last_annotated_pil, use_container_width=True)
+                        st.markdown('<p class="img-caption">YOLO Detections</p>', unsafe_allow_html=True)
+                st.markdown("---")
+                _render_detections(st.session_state.last_detections, quest_items)
+                detected_names_q = [d.class_name for d in st.session_state.last_detections]
+                suggestions_q = get_project_suggestions(detected_names_q, max_results=3)
+                _render_project_cards(suggestions_q, detected_names_q, context="img_quest")
+
+    with tab_cam:
+        if st.session_state.quest_completed:
+            st.info("Quest complete! Start a new quest above to keep scanning.")
+        else:
+            st.markdown("📷 **Point your camera** at objects around the room to find your quest items!")
+            if "webcam_running" not in st.session_state:
+                st.session_state.webcam_running = False
+            c1, c2, _ = st.columns([1, 1, 4])
+            with c1:
+                start_btn_q = st.button("▶ Start", disabled=st.session_state.webcam_running, use_container_width=True, type="primary", key="cam_start_q")
+            with c2:
+                stop_btn_q = st.button("⏹ Stop", disabled=not st.session_state.webcam_running, use_container_width=True, key="cam_stop_q")
+            if start_btn_q:
+                st.session_state.webcam_running = True
+                st.rerun()
+            if stop_btn_q:
+                st.session_state.webcam_running = False
+                st.rerun()
+            cam_status_q = (
+                '<span style="color:#4ade80;font-weight:900">● Live</span>'
+                if st.session_state.webcam_running
+                else '<span style="color:#ef4444;font-weight:900">● Stopped</span>'
+            )
+            st.markdown(cam_status_q, unsafe_allow_html=True)
+            frame_placeholder_q = st.empty()
+            cam_projects_slot_q = st.empty()
+            if st.session_state.webcam_running:
+                cap = cv2.VideoCapture(0)
+                if not cap.isOpened():
+                    st.error("⚠️ **Webcam not accessible.** Grant camera permission and try again.")
+                    st.session_state.webcam_running = False
+                    cap.release()
+                    st.stop()
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+                try:
+                    frame_count_q = 0
+                    while st.session_state.webcam_running:
+                        ret, frame_bgr = cap.read()
+                        if not ret:
+                            time.sleep(0.1)
+                            continue
+                        ann_bgr, detections = run_inference(model, frame_bgr, confidence)
+                        st.session_state.last_detections = detections
+                        _handle_detections(detections, quest_board_slot, sound_slot)
+                        ann_rgb = cv2.cvtColor(ann_bgr, cv2.COLOR_BGR2RGB)
+                        frame_placeholder_q.image(ann_rgb, channels="RGB", use_container_width=True, caption="Live YOLO Detections")
+                        frame_count_q += 1
+                        if frame_count_q % 60 == 0 and detections:
+                            dn = [d.class_name for d in detections]
+                            with cam_projects_slot_q.container():
+                                _render_project_cards(get_project_suggestions(dn, max_results=2), dn, context="cam_live")
+                        if st.session_state.quest_completed:
+                            break
+                        time.sleep(0.05)
+                finally:
+                    cap.release()
+            if not st.session_state.webcam_running and st.session_state.last_detections:
+                dn = [d.class_name for d in st.session_state.last_detections]
+                with cam_projects_slot_q.container():
+                    _render_project_cards(get_project_suggestions(dn, max_results=3), dn, context="cam_stopped")
+
+    st.markdown("---")
+    _render_trophy_case(progress.get("trophies", []))
 
 # ── ⚙️ Scanner Settings (power users find it; casual users never see it) ──────
 with st.expander("⚙️ Scanner Settings", expanded=False):
