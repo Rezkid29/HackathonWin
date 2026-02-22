@@ -98,8 +98,15 @@ st.markdown(
     footer { visibility: hidden; }
     section.main > div {
         max-width: 1180px;
+        margin-left: auto;
+        margin-right: auto;
         padding-top: 22px;
         padding-bottom: 84px;
+    }
+    div[data-testid="stMainBlockContainer"] {
+        max-width: 1180px;
+        margin-left: auto;
+        margin-right: auto;
     }
     div[data-testid="stVerticalBlock"] > div:has(> .game-header),
     div[data-testid="stVerticalBlock"] > div:has(> .quest-board),
