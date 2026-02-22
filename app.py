@@ -41,6 +41,7 @@ from utils.model import load_model
 from utils.progress import load_progress, on_quest_completed, save_progress
 from utils.quest import check_detections, generate_quest, get_emoji
 from utils.projects import get_project_suggestions
+from utils.completed import save_completed_project, load_completed_projects, is_project_completed
 
 # ── Page config ───────────────────────────────────────────────────────────────
 
@@ -599,6 +600,7 @@ st.markdown(
     .project-cta-btn {
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         gap: 6px;
         background: linear-gradient(90deg, #ff6a00, #ff8f3d);
         color: #fff !important;
@@ -607,21 +609,17 @@ st.markdown(
         padding: 10px 20px;
         border-radius: 10px;
         border: none;
-        cursor: pointer;
+        cursor: default;
         text-decoration: none !important;
         min-height: 48px;
-        float: right;
-        margin-top: 4px;
+        margin-top: 10px;
         letter-spacing: 0.6px;
         text-transform: uppercase;
         font-weight: 900;
         box-shadow: 0 6px 18px rgba(255,106,0,0.34);
-    }
-    .project-cta-btn:disabled {
         opacity: 0.92;
-        cursor: default;
+        width: 100%;
     }
-    .project-cta-btn:hover { opacity: 0.95; transform: scale(1.02); }
     .project-empty-state {
         text-align: center;
         padding: 28px 20px;
@@ -654,6 +652,64 @@ st.markdown(
         color: #c8d1df;
         margin: 10px 0 14px 0;
         line-height: 1.5;
+    }
+    /* ── Completed project state ─────────────────────────── */
+    .project-done-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(34,197,94,0.12);
+        border: 1px solid #22c55e;
+        color: #4ade80;
+        font-size: 0.85rem;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        padding: 8px 16px;
+        border-radius: 10px;
+        margin-top: 10px;
+        width: 100%;
+        justify-content: center;
+    }
+    /* ── Completed projects log panel ────────────────────── */
+    .cp-panel {
+        background: linear-gradient(145deg, #12192a, #0f1520);
+        border: 1px solid #2c3850;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin-bottom: 18px;
+    }
+    .cp-panel-title {
+        font-family: 'Fredoka One', sans-serif;
+        font-size: 1.1rem;
+        color: #ff8f3d;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+    }
+    .cp-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid #1e2a3e;
+        margin-bottom: 7px;
+    }
+    .cp-row:last-child { margin-bottom: 0; }
+    .cp-emoji { font-size: 1.4rem; flex-shrink: 0; }
+    .cp-info  { flex: 1; min-width: 0; }
+    .cp-title { font-weight: 900; color: #e2e8f0; font-size: 0.9rem; }
+    .cp-meta  { color: #6b7f9a; font-size: 0.75rem; margin-top: 2px; }
+    .cp-stem  {
+        font-size: 0.7rem; font-weight: 900; letter-spacing: 0.6px;
+        text-transform: uppercase; padding: 2px 8px;
+        border-radius: 20px; border: 1px solid; flex-shrink: 0;
+    }
+    /* Mark Complete button — green instead of orange */
+    div[data-testid="stButton"] button[kind="secondary"] {
+        background: linear-gradient(90deg, #16a34a, #22c55e) !important;
+        border-color: #4ade80 !important;
+        box-shadow: 0 4px 12px rgba(34,197,94,0.28) !important;
     }
 
     /* ── Streamlit controls skin ─────────────────────────── */
@@ -790,6 +846,11 @@ def _init_state() -> None:
         st.session_state.scan_confidence = 0.45
     if "scan_model" not in st.session_state:
         st.session_state.scan_model = "yolo26n.pt"
+    # Completed projects: set of titles for fast O(1) lookup
+    if "completed_project_titles" not in st.session_state:
+        st.session_state.completed_project_titles = {
+            r["title"] for r in load_completed_projects()
+        }
 
 
 _init_state()
@@ -1155,9 +1216,61 @@ def _render_detections(detections: List[Detection], quest_items: List[str]) -> N
         )
 
 
+# ── Completed projects log ────────────────────────────────────────────────────
+
+def _render_completed_log() -> None:
+    """Render the completed projects expander panel."""
+    records = load_completed_projects()
+
+    _stem_colours = {
+        "Science":     ("#1c3a55", "#38bdf8", "#9fdcff"),
+        "Engineering": ("#3d1f00", "#ff6a00", "#ffd0aa"),
+        "Technology":  ("#2d1a4a", "#a855f7", "#d4a7ff"),
+        "Math":        ("#0f3020", "#22c55e", "#7cf2a8"),
+    }
+
+    label = f"📚 Completed Projects ({len(records)})"
+    with st.expander(label, expanded=False):
+        if not records:
+            st.markdown(
+                "<p style='color:#6b7f9a;font-size:0.9rem;margin:0;'>"
+                "No projects completed yet — scan objects to get suggestions, then mark them done!</p>",
+                unsafe_allow_html=True,
+            )
+            return
+
+        rows_html = ""
+        for r in records:
+            stem = r.get("stem_tag", "")
+            bg, border, color = _stem_colours.get(stem, ("#1a2236", "#64748b", "#94a3b8"))
+            stem_pill = (
+                f'<span class="cp-stem" style="background:{bg};border-color:{border};color:{color};">'
+                f"{stem}</span>"
+            ) if stem else ""
+
+            dt_str = r.get("completed_at", "")[:10]  # ISO date portion
+            diff   = r.get("difficulty", "")
+            meta   = " · ".join(filter(None, [diff, r.get("time_est", ""), dt_str]))
+
+            rows_html += f"""
+            <div class="cp-row">
+                <span class="cp-emoji">{r.get('emoji','🛠️')}</span>
+                <div class="cp-info">
+                    <div class="cp-title">{r.get('title','')}</div>
+                    <div class="cp-meta">{meta}</div>
+                </div>
+                {stem_pill}
+            </div>"""
+
+        st.markdown(
+            f'<div class="cp-panel"><div class="cp-panel-title">🏅 Your STEM Lab Log</div>{rows_html}</div>',
+            unsafe_allow_html=True,
+        )
+
+
 # ── Project cards renderer ────────────────────────────────────────────────────
 
-def _render_project_cards(suggestions: list[dict]) -> None:
+def _render_project_cards(suggestions: list[dict], detected_names: list[str] | None = None) -> None:
     """Render project suggestion cards as styled craft-instruction cards."""
     if not suggestions:
         st.markdown(
@@ -1217,6 +1330,8 @@ def _render_project_cards(suggestions: list[dict]) -> None:
             f'<div class="project-learn">💡 {learn_txt}</div>'
         ) if learn_txt else ""
 
+        already_done = p["title"] in st.session_state.get("completed_project_titles", set())
+
         st.markdown(
             f"""
             <div class="project-card {card_cls}">
@@ -1239,12 +1354,19 @@ def _render_project_cards(suggestions: list[dict]) -> None:
                 <hr class="project-divider">
                 <ol class="project-steps">{steps_html}</ol>
                 {learn_block}
-                <button class="project-cta-btn" type="button" disabled>▶ Let's Make It! →</button>
-                <div style="clear:both"></div>
+                {"<div class='project-done-badge'>✅ Completed!</div>" if already_done else ""}
             </div>
             """,
             unsafe_allow_html=True,
         )
+
+        if not already_done:
+            btn_key = f"complete_{p['title'].replace(' ', '_')}"
+            if st.button("✅ Mark as Complete", key=btn_key, use_container_width=True):
+                p["_objects_detected"] = detected_names or []
+                save_completed_project(p)
+                st.session_state.completed_project_titles.add(p["title"])
+                st.rerun()
 
 
 # ════════════════════════════════════════════════════════════════════════════════
@@ -1402,7 +1524,7 @@ with tab_img:
             # Project suggestions derived from detections
             detected_names = [d.class_name for d in st.session_state.last_detections]
             suggestions    = get_project_suggestions(detected_names, max_results=3)
-            _render_project_cards(suggestions)
+            _render_project_cards(suggestions, detected_names)
 
 
 # ══ TAB 2 – Live Camera ═══════════════════════════════════════════════════════
@@ -1492,7 +1614,7 @@ with tab_cam:
                         detected_names = [d.class_name for d in detections]
                         suggestions    = get_project_suggestions(detected_names, max_results=2)
                         with cam_projects_slot.container():
-                            _render_project_cards(suggestions)
+                            _render_project_cards(suggestions, detected_names)
 
                     if st.session_state.quest_completed:
                         break
@@ -1506,13 +1628,16 @@ with tab_cam:
             detected_names = [d.class_name for d in st.session_state.last_detections]
             suggestions    = get_project_suggestions(detected_names, max_results=3)
             with cam_projects_slot.container():
-                _render_project_cards(suggestions)
+                _render_project_cards(suggestions, detected_names)
 
 
 # ── Trophy case ───────────────────────────────────────────────────────────────
 st.markdown("---")
 progress = load_progress()
 _render_trophy_case(progress.get("trophies", []))
+
+# ── Completed projects log ────────────────────────────────────────────────────
+_render_completed_log()
 
 # ── ⚙️ Scanner Settings (power users find it; casual users never see it) ──────
 with st.expander("⚙️ Scanner Settings", expanded=False):
