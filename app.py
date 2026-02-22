@@ -443,31 +443,6 @@ st.markdown(
     .det-bonus { font-size: 0.75rem; color: #8da2c8; font-weight: 700; }
 
     /* ── Drag-zone upload ────────────────────────────────── */
-    .drag-zone {
-        border: 2px dashed #3b465f;
-        border-radius: 18px;
-        padding: 36px 24px;
-        text-align: center;
-        background: linear-gradient(145deg, #121926 0%, #0f1521 100%);
-        margin-bottom: 12px;
-        transition: border-color 0.2s ease, background 0.2s ease;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
-    }
-    .drag-zone:hover {
-        border-color: #ff8f3d;
-        background: linear-gradient(145deg, #171f31 0%, #121927 100%);
-    }
-    .drag-zone-icon  { font-size: 3rem; line-height: 1; margin-bottom: 10px; }
-    .drag-zone-title {
-        font-family: 'Nunito', sans-serif;
-        font-size: 1.2rem;
-        color: #e2e8f0;
-        margin-bottom: 4px;
-        letter-spacing: 1px;
-        font-weight: 900;
-        text-transform: uppercase;
-    }
-    .drag-zone-sub   { color: #98a4b9; font-size: 0.9rem; }
 
     /* ── Scan animation ──────────────────────────────────── */
     @keyframes scanDown {
@@ -728,11 +703,74 @@ st.markdown(
         filter: brightness(1.05);
         border-color: #ffc38f !important;
     }
-    div[data-testid="stFileUploader"] > label,
+    /* ── File uploader: styled as the drag zone ─────────── */
+    div[data-testid="stFileUploader"] > label {
+        font-family: 'Nunito', sans-serif !important;
+        font-size: 1rem !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.5px;
+        color: #e2e8f0 !important;
+        text-transform: uppercase;
+    }
     div[data-testid="stFileUploader"] section {
-        background: linear-gradient(145deg, #131a28, #101621) !important;
-        border: 1px solid #36425b !important;
-        border-radius: 12px !important;
+        background: linear-gradient(145deg, #121926, #0f1521) !important;
+        border: 2px dashed #3b465f !important;
+        border-radius: 18px !important;
+        padding: 28px 24px !important;
+        text-align: center;
+        transition: border-color 0.2s ease, background 0.2s ease;
+    }
+    div[data-testid="stFileUploader"] section:hover {
+        border-color: #ff8f3d !important;
+        background: linear-gradient(145deg, #171f31, #121927) !important;
+    }
+    /* Hide the repeated "Drag and drop file here" instruction text */
+    div[data-testid="stFileUploader"] section > div > span {
+        display: none !important;
+    }
+    /* ── Uploaded file chip — collapsible ────────────────── */
+    div[data-testid="stFileUploader"] ul {
+        list-style: none !important;
+        padding: 0 !important;
+        margin: 8px 0 0 0 !important;
+    }
+    div[data-testid="stFileUploader"] li {
+        background: linear-gradient(145deg, #141c2d, #101621) !important;
+        border: 1px solid #2c3850 !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+    }
+    div[data-testid="stFileUploaderFile"] {
+        cursor: pointer;
+        padding: 6px 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px;
+        transition: background 0.15s;
+    }
+    div[data-testid="stFileUploaderFile"]:hover {
+        background: rgba(255,106,0,0.08) !important;
+    }
+    div[data-testid="stFileUploaderFileData"] {
+        flex: 1;
+        min-width: 0;
+    }
+    div[data-testid="stFileUploaderFileName"] {
+        font-size: 0.82rem !important;
+        font-weight: 700 !important;
+        color: #c8d5e8 !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* Progress bar inside file chip */
+    div[data-testid="stFileUploader"] [role="progressbar"] {
+        height: 3px !important;
+        border-radius: 2px;
+        background: #1e2a3e !important;
+    }
+    div[data-testid="stFileUploader"] [role="progressbar"] > div {
+        background: var(--accent) !important;
     }
     div[data-testid="stExpander"] details {
         background: linear-gradient(145deg, #131a27, #101621);
@@ -784,8 +822,6 @@ st.markdown(
         .completion-stats { gap: 12px; }
         .trophy-shelf { gap: 8px; }
         .trophy-card  { font-size: 0.78rem; padding: 8px 12px; }
-        .drag-zone { padding: 24px 16px; }
-        .drag-zone-title { font-size: 1.1rem; }
         body { padding-bottom: 64px; }
 
         /* Show bottom nav on mobile */
@@ -1446,22 +1482,9 @@ with tab_img:
     if st.session_state.quest_completed:
         st.info("Quest complete! Start a new quest above to keep scanning.")
     else:
-        # Decorative drag zone (visual affordance; actual upload below)
-        st.markdown(
-            """
-            <div class="drag-zone">
-                <div class="drag-zone-icon">📷</div>
-                <div class="drag-zone-title">Drag a photo here</div>
-                <div class="drag-zone-sub">— or use the browse button below —</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
         uploaded = st.file_uploader(
-            "Drop or browse an image",
+            "📷  Drag a photo here, or click to browse",
             type=["jpg", "jpeg", "png"],
-            label_visibility="collapsed",
         )
 
         if uploaded is not None:
