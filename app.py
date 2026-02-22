@@ -27,7 +27,6 @@ Architecture
 from __future__ import annotations
 
 import io
-import random
 import time
 from typing import List, Set
 
@@ -78,40 +77,21 @@ st.markdown(
         --hard: #ef4444;
         --combo: #a855f7;
     }
-    html, body {
-        background: black !important;
-        background-image: radial-gradient(circle at center, white 0%, #222 10%, black 60%) !important;
-        font-family: 'Nunito', sans-serif;
-        color: var(--text-main);
-        overflow: hidden;
-    }
-    [data-testid="stAppViewContainer"] {
-        background: transparent !important;
+    html, body, [data-testid="stAppViewContainer"] {
+        background: radial-gradient(circle at 20% -10%, #3c4457 0%, var(--bg-main) 46%, #222836 100%) !important;
         font-family: 'Nunito', sans-serif;
         color: var(--text-main);
     }
-    /* Triangle tunnel layer */
-    .bg-wrap {
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
         position: fixed;
-        inset: 0;
-        z-index: 0;
-        transform-style: preserve-3d;
-        perspective: 800px;
+        inset: 16px;
+        border-radius: 22px;
+        border: 1px solid #3a4358;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02), 0 14px 40px rgba(0,0,0,0.45);
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0));
         pointer-events: none;
-        overflow: hidden;
-    }
-    .tri {
-        height: 0;
-        width: 0;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-    }
-    /* Streamlit content floats above the tunnel */
-    [data-testid="stAppViewContainer"],
-    [data-testid="stMainBlockContainer"] {
-        position: relative;
-        z-index: 1;
+        z-index: 0;
     }
     [data-testid="stSidebar"] { display: none; }
     [data-testid="collapsedControl"] { display: none; }
@@ -981,53 +961,6 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-
-# ── Triangle tunnel background ────────────────────────────────────────────────
-
-def _inject_triangle_bg(total: int = 200, duration: float = 10.0) -> None:
-    """
-    Generates and injects the 200-triangle 3-D tunnel animation.
-    Uses a fixed seed so the layout is stable across reruns.
-    """
-    rng = random.Random(7)  # fixed seed → deterministic layout every rerun
-
-    tri_divs = "".join("<div class='tri'></div>" for _ in range(total))
-
-    css_rules: list[str] = []
-    for i in range(1, total + 1):
-        size   = rng.randint(1, 50)
-        rotate = rng.randint(1, 360)
-        hue    = rng.randint(0, 360)
-        tx     = rng.randint(-500, 500)
-        ty     = rng.randint(-500, 500)
-        half   = size / 2
-        delay  = i * -(duration / total)
-
-        css_rules.append(f"""
-.tri:nth-child({i}){{
-  border-top:{size}px solid hsla({hue},100%,50%,1);
-  border-right:{size}px solid transparent;
-  border-left:{size}px solid transparent;
-  margin-left:-{half}px;
-  margin-top:-{half}px;
-  filter:grayscale(1);
-  transform:rotate({rotate}deg) translate3d(0,0,-1500px) scale(0);
-  animation:tri{i} {duration}s infinite linear;
-  animation-delay:{delay:.3f}s;
-  opacity:0;
-}}
-@keyframes tri{i}{{
-  0%{{opacity:1;transform:rotate({rotate * 1.5}deg) translate3d({tx}px,{ty}px,1000px) scale(1);}}
-}}""")
-
-    payload = f"""
-<div class="bg-wrap">{tri_divs}</div>
-<style>{''.join(css_rules)}</style>
-"""
-    st.markdown(payload, unsafe_allow_html=True)
-
-
-_inject_triangle_bg()
 
 # ── Session state init ────────────────────────────────────────────────────────
 
