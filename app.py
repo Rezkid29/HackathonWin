@@ -660,17 +660,40 @@ st.markdown(
         letter-spacing: 0.5px;
         margin-bottom: 12px;
     }
-    .cp-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 8px 10px;
+    /* ── Completed project row — collapsible <details> ──── */
+    details.cp-row {
         border-radius: 8px;
         background: rgba(255,255,255,0.03);
         border: 1px solid #1e2a3e;
         margin-bottom: 7px;
+        overflow: hidden;
+        transition: border-color 0.15s;
     }
-    .cp-row:last-child { margin-bottom: 0; }
+    details.cp-row:last-child { margin-bottom: 0; }
+    details.cp-row[open] { border-color: #3a4f6e; }
+    summary.cp-summary {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        cursor: pointer;
+        list-style: none;
+        user-select: none;
+    }
+    summary.cp-summary::-webkit-details-marker { display: none; }
+    summary.cp-summary::after {
+        content: "›";
+        margin-left: auto;
+        font-size: 1.1rem;
+        color: #4a5e7a;
+        transition: transform 0.2s;
+        flex-shrink: 0;
+    }
+    details.cp-row[open] > summary.cp-summary::after {
+        transform: rotate(90deg);
+        color: #ff8f3d;
+    }
+    summary.cp-summary:hover { background: rgba(255,106,0,0.06); }
     .cp-emoji { font-size: 1.4rem; flex-shrink: 0; }
     .cp-info  { flex: 1; min-width: 0; }
     .cp-title { font-weight: 900; color: #e2e8f0; font-size: 0.9rem; }
@@ -679,6 +702,28 @@ st.markdown(
         font-size: 0.7rem; font-weight: 900; letter-spacing: 0.6px;
         text-transform: uppercase; padding: 2px 8px;
         border-radius: 20px; border: 1px solid; flex-shrink: 0;
+    }
+    /* Expanded body of the row */
+    .cp-detail {
+        padding: 0 12px 12px 12px;
+        border-top: 1px solid #1e2a3e;
+    }
+    .cp-tagline {
+        font-size: 0.83rem;
+        color: #8fa3be;
+        font-style: italic;
+        margin: 8px 0 6px 0;
+        line-height: 1.4;
+    }
+    .cp-learn {
+        font-size: 0.8rem;
+        color: #c8d1df;
+        background: rgba(255,106,0,0.07);
+        border-left: 3px solid #ff6a00;
+        border-radius: 0 6px 6px 0;
+        padding: 5px 10px;
+        margin-top: 6px;
+        line-height: 1.5;
     }
     /* Mark Complete button — green instead of orange */
     div[data-testid="stButton"] button[kind="secondary"] {
@@ -716,13 +761,22 @@ st.markdown(
         background: linear-gradient(145deg, #121926, #0f1521) !important;
         border: 2px dashed #3b465f !important;
         border-radius: 18px !important;
-        padding: 28px 24px !important;
+        padding: 20px 24px 24px !important;
         text-align: center;
         transition: border-color 0.2s ease, background 0.2s ease;
+        position: relative;
     }
     div[data-testid="stFileUploader"] section:hover {
         border-color: #ff8f3d !important;
         background: linear-gradient(145deg, #171f31, #121927) !important;
+    }
+    /* Large camera icon injected above the native text */
+    div[data-testid="stFileUploader"] section::before {
+        content: "📷";
+        display: block;
+        font-size: 2.6rem;
+        line-height: 1;
+        margin-bottom: 8px;
     }
     /* Hide the repeated "Drag and drop file here" instruction text */
     div[data-testid="stFileUploader"] section > div > span {
@@ -1255,7 +1309,17 @@ def _render_detections(detections: List[Detection], quest_items: List[str]) -> N
 # ── Completed projects log ────────────────────────────────────────────────────
 
 def _render_completed_log() -> None:
-    """Render the completed projects expander panel."""
+    """Render the completed projects expander panel with collapsible rows."""
+    from utils.projects import PROJECT_MAP, COMBO_MAP
+
+    # Build a flat title → project dict lookup for enriching stored records
+    _all_projects: dict[str, dict] = {}
+    for projects in PROJECT_MAP.values():
+        for p in projects:
+            _all_projects.setdefault(p["title"], p)
+    for p in COMBO_MAP.values():
+        _all_projects.setdefault(p["title"], p)
+
     records = load_completed_projects()
 
     _stem_colours = {
@@ -1284,19 +1348,33 @@ def _render_completed_log() -> None:
                 f"{stem}</span>"
             ) if stem else ""
 
-            dt_str = r.get("completed_at", "")[:10]  # ISO date portion
+            dt_str = r.get("completed_at", "")[:10]
             diff   = r.get("difficulty", "")
             meta   = " · ".join(filter(None, [diff, r.get("time_est", ""), dt_str]))
 
+            # Enrich with tagline / learn from the project definition if available
+            full = _all_projects.get(r.get("title", ""), {})
+            tagline = r.get("tagline") or full.get("tagline", "")
+            learn   = full.get("learn", "")
+
+            tagline_html = f'<div class="cp-tagline">"{tagline}"</div>' if tagline else ""
+            learn_html   = f'<div class="cp-learn">💡 {learn}</div>'   if learn   else ""
+
             rows_html += f"""
-            <div class="cp-row">
-                <span class="cp-emoji">{r.get('emoji','🛠️')}</span>
-                <div class="cp-info">
-                    <div class="cp-title">{r.get('title','')}</div>
-                    <div class="cp-meta">{meta}</div>
+            <details class="cp-row">
+                <summary class="cp-summary">
+                    <span class="cp-emoji">{r.get('emoji','🛠️')}</span>
+                    <div class="cp-info">
+                        <div class="cp-title">{r.get('title','')}</div>
+                        <div class="cp-meta">{meta}</div>
+                    </div>
+                    {stem_pill}
+                </summary>
+                <div class="cp-detail">
+                    {tagline_html}
+                    {learn_html}
                 </div>
-                {stem_pill}
-            </div>"""
+            </details>"""
 
         st.markdown(
             f'<div class="cp-panel"><div class="cp-panel-title">🏅 Your STEM Lab Log</div>{rows_html}</div>',
