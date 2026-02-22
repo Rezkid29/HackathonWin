@@ -1,8 +1,8 @@
 """
 app.py
 ======
-YOLOVision – Scavenger Hunt Edition
-------------------------------------
+MakeGyver
+---------
 A kid-friendly (ages 9-13) gamified object-detection app built on Streamlit
 and Ultralytics YOLO26.
 
@@ -26,8 +26,10 @@ Architecture
 
 from __future__ import annotations
 
+import base64
 import io
 import time
+from pathlib import Path
 from typing import List, Set
 
 import cv2
@@ -46,7 +48,7 @@ from utils.completed import save_completed_project, load_completed_projects, is_
 # ── Page config ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
-    page_title="Scavenger Hunt – YOLOVision",
+    page_title="MakeGyver",
     page_icon="🔍",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -99,7 +101,7 @@ st.markdown(
         top: 0;
         z-index: 200;
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         background: rgba(255,255,255,0.95);
         backdrop-filter: blur(12px);
@@ -112,7 +114,21 @@ st.markdown(
         flex-wrap: wrap;
         box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
-    .hud-left { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+    .header-spacer { flex: 1; min-width: 0; }
+    .header-logo-wrap {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    .header-badges {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .header-logo { height: 38px; width: auto; display: block; object-fit: contain; }
     .game-title {
         font-size: 1.35rem;
         font-weight: 700;
@@ -1033,6 +1049,16 @@ def _quest_board_html(items: List[str], found: Set[str]) -> str:
 
 # ── Game header ───────────────────────────────────────────────────────────────
 
+def _logo_data_uri() -> str:
+    """Load MakeGyver logo as a data URI for embedding in the header."""
+    logo_path = Path(__file__).parent / "assets" / "makegyver-logo.png"
+    if not logo_path.exists():
+        return ""
+    raw = logo_path.read_bytes()
+    b64 = base64.b64encode(raw).decode()
+    return f"data:image/png;base64,{b64}"
+
+
 def _render_header(streak: int, score: int, quest_start: float, completed: bool) -> None:
     if completed:
         timer_html = '<span class="hud-badge timer">✅ Done!</span>'
@@ -1044,17 +1070,14 @@ def _render_header(streak: int, score: int, quest_start: float, completed: bool)
             f'<span class="timer-label">⏱&nbsp;</span>{mins}:{secs:02d}'
             f'</span>'
         )
-
+    logo_src = _logo_data_uri()
+    logo_img = f'<img src="{logo_src}" alt="MakeGyver" class="header-logo" />' if logo_src else ""
     st.markdown(
         f"""
         <div class="game-header">
-            <div class="hud-left">
-                <span class="game-title">Scavenger Hunt</span>
-                <div class="hud-nav">
-                    <span class="hud-nav-item active">Dashboard</span>
-                </div>
-            </div>
-            <div class="hud-badges">
+            <div class="header-spacer"></div>
+            <div class="header-logo-wrap">{logo_img}</div>
+            <div class="header-spacer header-badges">
                 <span class="hud-badge streak">🔥 Streak: {streak}</span>
                 <span class="hud-badge score">⭐ {score} pts</span>
                 {timer_html}
@@ -1067,15 +1090,14 @@ def _render_header(streak: int, score: int, quest_start: float, completed: bool)
 
 def _render_header_simple() -> None:
     """Minimal header for Detect mode (no streak/timer/quest)."""
+    logo_src = _logo_data_uri()
+    logo_img = f'<img src="{logo_src}" alt="MakeGyver" class="header-logo" />' if logo_src else ""
     st.markdown(
-        """
+        f"""
         <div class="game-header">
-            <div class="hud-left">
-                <span class="game-title">YOLOVision</span>
-                <div class="hud-nav">
-                    <span class="hud-nav-item active">Detect</span>
-                </div>
-            </div>
+            <div class="header-spacer"></div>
+            <div class="header-logo-wrap">{logo_img}</div>
+            <div class="header-spacer"></div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -1179,7 +1201,7 @@ def _make_share_card(
         b = int(23 + (55 - 23) * y / H)
         draw.line([(0, y), (W, y)], fill=(r, g, b))
 
-    draw.text((W // 2, 32), "🔍 SCAVENGER HUNT", font=fnt_big, fill="#FFD700", anchor="mm")
+    draw.text((W // 2, 32), "🔍 MAKEGYVER", font=fnt_big, fill="#FFD700", anchor="mm")
 
     x_start, y_start = 60, 90
     col_w = 180
@@ -1203,7 +1225,7 @@ def _make_share_card(
     n_found = len(found & set(items))
     draw.text((W - 80, y_stats + 18), f"{n_found}/5 found", font=fnt_med, fill="#4ade80", anchor="rm")
 
-    draw.text((W // 2, H - 18), "Made with YOLOVision 🔍", font=fnt_sm, fill="#334155", anchor="mm")
+    draw.text((W // 2, H - 18), "Made with MakeGyver 🔍", font=fnt_sm, fill="#334155", anchor="mm")
 
     return img
 
