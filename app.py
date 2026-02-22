@@ -78,7 +78,7 @@ st.markdown(
         --combo: #a855f7;
     }
     html, body, [data-testid="stAppViewContainer"] {
-        background: radial-gradient(circle at 20% -10%, #3c4457 0%, var(--bg-main) 46%, #222836 100%) !important;
+        background: #000 !important;
         font-family: 'Nunito', sans-serif;
         color: var(--text-main);
     }
